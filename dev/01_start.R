@@ -27,4 +27,6 @@ usethis::use_description(
 
 # ## Use git ----
 usethis::use_git()
+Sys.setenv(GITHUB_PAT = gitcreds::gitcreds_get(use_cache = FALSE)$password)
 usethis::use_github(private = TRUE)
+usethis::use_readme_md()
