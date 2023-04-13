@@ -1,0 +1,37 @@
+DBMS:
+bigquery
+
+Error:
+java.sql.SQLException: [Simba][BigQueryJDBCDriver](100034) The job has timed out on the server. Try increasing the timeout value.
+
+SQL:
+insert into test_omop_tmp.cg_example_summary_stats (cohort_definition_id, base_count, final_count, mode_id)
+select 23 as cohort_definition_id, pc.total as person_count, coalesce(cast(fc.total as int64), 0) as final_count, 0 as mode_id
+from
+(select COUNT(event_id) as total from test_omop_tmp.m9txdxiaqualified_events) pc,
+(select sum(sr.person_count) as total
+  from test_omop_tmp.cg_example_inclusion_result sr
+  cross join (select count(*) as total_rules from test_omop_tmp.cg_example_inclusion where cohort_definition_id = 23) ruletotal
+  where sr.mode_id = 0 and sr.cohort_definition_id = 23 and sr.inclusion_rule_mask = power(cast(2  as int64),ruletotal.total_rules)-1
+) fc
+
+
+R version:
+R version 4.2.1 (2022-06-23 ucrt)
+
+Platform:
+x86_64-w64-mingw32
+
+Attached base packages:
+- stats
+- graphics
+- grDevices
+- datasets
+- utils
+- methods
+- base
+
+Other attached packages:
+- HadesExtras (0.0.0.9000)
+- checkmate (2.1.0)
+- testthat (3.1.4)

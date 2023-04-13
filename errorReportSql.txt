@@ -1,0 +1,36 @@
+DBMS:
+bigquery
+
+Error:
+java.sql.SQLException: [Simba][BigQueryJDBCDriver](100032) Error executing query job. Message: Table "yrovxrrftime_series" must be qualified with a dataset (e.g. dataset.table).
+
+SQL:
+drop table if exists yrovxrrftime_series
+
+R version:
+R version 4.2.1 (2022-06-23 ucrt)
+
+Platform:
+x86_64-w64-mingw32
+
+Attached base packages:
+- stats
+- graphics
+- grDevices
+- datasets
+- utils
+- methods
+- base
+
+Other attached packages:
+- magrittr (2.0.3)
+- plotly (4.10.0)
+- DT (0.24)
+- ggplot2 (3.3.6)
+- shiny (1.7.2)
+- HadesExtras (0.0.0.9000)
+- testthat (3.1.4)
+- FeatureExtraction (3.2.0)
+- Andromeda (0.6.1)
+- dplyr (1.0.10)
+- DatabaseConnector (5.0.4)

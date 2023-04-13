@@ -1,0 +1,11 @@
+﻿"cohort_id","cohort_name","sql","json"
+100,"From File","DELETE FROM @target_database_schema.@target_cohort_table where cohort_definition_id = @target_cohort_id;
+INSERT INTO @target_database_schema.@target_cohort_table (cohort_definition_id, subject_id, cohort_start_date, cohort_end_date)
+SELECT 
+  @target_cohort_id AS cohort_definition_id,
+  person.person_id AS person_id,
+  import.COHORT_START_DATE AS start_date,
+  import.COHORT_END_DATE AS end_date
+FROM @target_database_schema.tmp_import_table AS import
+LEFT JOIN @cdm_database_schema.person AS person
+ON import.subject_id=person.person_id","{}"
