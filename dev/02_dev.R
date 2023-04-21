@@ -17,11 +17,15 @@ usethis::use_package( "lubridate")
 usethis::use_package( "DatabaseConnector")
 usethis::use_package( "SqlRender")
 usethis::use_package( "ROhdsiWebApi")
+#
+usethis::use_package( "checkmate")
+usethis::use_package( "yaml")
 
 
 
 ## Add functions
 usethis::use_r("readDatabasesSettings")
+usethis::use_r("importCohortsFromFile")
 
 ## Add internal datasets ----
 ## If you have data in your package
@@ -37,7 +41,7 @@ usethis::use_test("readDatabasesSettings")
 # Documentation
 
 ## Vignette ----
-#usethis::use_vignette("connection_tutorial")
+usethis::use_vignette("connection_tutorial")
 #devtools::build_vignettes()
 
 ## Code coverage ----
