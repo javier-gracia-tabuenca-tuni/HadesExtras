@@ -1,0 +1,44 @@
+---
+title: "connection_tutorial"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{connection_tutorial}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(HadesExtras)
+```
+
+
+```{r}
+
+path_databases_settings_yalm <- "../tests/config/dev_config.yml"
+
+readDatabasesNames(path_databases_settings_yalm)
+
+```
+
+```{r}
+database_settings <- readDatabaseSettings(path_databases_settings_yalm, "dev_bigquery")
+```
+
+```{r}
+checkDatabaseSettings(database_settings)
+```
+
+
+```{r}
+
+```
+
+
+

@@ -132,15 +132,9 @@ checkDatabaseSettings <- function(database_settings) {
   ## Check schemas
   e <- tryCatch({
     connection <- DatabaseConnector::connect(database_settings$connectionDetails)
-
-    sql <- " SELECT * FROM @cdm_schema.cdm_source LIMIT 1"
-    sql <- SqlRender::render(
-      sql,
-      cdm_schema = database_settings$schemas$CDM
-    )
-    sql <- SqlRender::translate(sql, targetDialect = database_settings$connection$dbms)
-
-    cdm_source <- DatabaseConnector::dbGetQuery(connection, sql)
+    cdm_source <- dplyr::tbl(connection, DatabaseConnector::inDatabaseSchema(database_settings$schemas$CDM, "cdm_source")) |>
+      dplyr::collect() |>
+      dplyr::slice(1)
     DatabaseConnector::disconnect(connection)
   }, error=function(cond){ return(cond$message)})
 

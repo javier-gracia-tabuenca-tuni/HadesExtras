@@ -22,11 +22,6 @@ usethis::use_package( "checkmate")
 usethis::use_package( "yaml")
 
 
-
-## Add functions
-usethis::use_r("readDatabasesSettings")
-usethis::use_r("importCohortsFromFile")
-
 ## Add internal datasets ----
 ## If you have data in your package
 #usethis::use_data_raw( name = "my_dataset", open = FALSE )

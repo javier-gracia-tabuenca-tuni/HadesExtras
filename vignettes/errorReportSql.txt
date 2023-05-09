@@ -5,7 +5,9 @@ Error:
 java.sql.SQLException: [Simba][BigQueryJDBCDriver](100032) Error executing query job. Message: EXEC_JOB_EXECUTION_ERR
 
 SQL:
-SELECT  * from finngen_omop_r11.cdm_source LIMIT 1000;
+select *
+from atlas-development-270609.finngen_omop_r11.cdm_source AS val_q02
+where (0 = 1);
 
 R version:
 R version 4.3.0 (2023-04-21)
