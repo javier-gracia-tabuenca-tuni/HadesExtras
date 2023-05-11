@@ -22,9 +22,14 @@
     },
     "DatabaseConnector": {
       "Package": "DatabaseConnector",
-      "Version": "6.2.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
+      "Version": "6.2.1",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "OHDSI",
+      "RemoteRepo": "DatabaseConnector",
+      "RemoteRef": "develop",
+      "RemoteSha": "5d2e0fbef8f419af1b3d9048379cb8581b87af3a",
       "Requirements": [
         "DBI",
         "R",
@@ -41,7 +46,7 @@
         "urltools",
         "utils"
       ],
-      "Hash": "20e029282c9ac90e4d71018feb507aff"
+      "Hash": "cbc4050f6582cc67cbc6d639428bef93"
     },
     "Eunomia": {
       "Package": "Eunomia",
@@ -152,14 +157,19 @@
     "SqlRender": {
       "Package": "SqlRender",
       "Version": "1.15.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "OHDSI",
+      "RemoteRepo": "SqlRender",
+      "RemoteRef": "develop",
+      "RemoteSha": "62616b12ca227d35f28e09d3b648f49db5051bdc",
       "Requirements": [
         "checkmate",
         "rJava",
         "rlang"
       ],
-      "Hash": "4d6f2d2f679f25eb4d3b091a5efce16c"
+      "Hash": "85433779df28eac1297127e9a10aa1c6"
     },
     "askpass": {
       "Package": "askpass",

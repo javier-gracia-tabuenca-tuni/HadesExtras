@@ -3,8 +3,10 @@ title: "connection_tutorial"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{connection_tutorial}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r, include = FALSE}
@@ -21,13 +23,14 @@ library(HadesExtras)
 
 ```{r}
 
-path_databases_settings_yalm <- "../tests/config/dev_config.yml"
+path_databases_settings_yalm <- "./tests/config/dev_config.yml"
 
 readDatabasesNames(path_databases_settings_yalm)
 
 ```
 
 ```{r}
+#database_settings <- readDatabaseSettings(path_databases_settings_yalm, "dev_eunomia")
 database_settings <- readDatabaseSettings(path_databases_settings_yalm, "dev_bigquery")
 ```
 
@@ -36,7 +39,18 @@ checkDatabaseSettings(database_settings)
 ```
 
 
+# load ids 
+
 ```{r}
+
+cohort_data <- tibble::tibble(
+    cohort_name = c("cohort 1", "cohort 2"),
+    cohort_definition_id = c(1,2),
+    cohort_start_date = as.Date(c("2020-01-01", "2020-01-01")),
+    cohort_end_date = as.Date(c("2020-01-03", "2020-01-04"))
+)
+
+insertCohortDataToCohortTable(database_settings, cohort_data)
 
 ```
 

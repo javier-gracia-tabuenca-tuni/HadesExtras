@@ -12,9 +12,10 @@ dev_bigquery:
     dbms: bigquery
     user: ""
     password: ""
-    connectionString: "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;ProjectId=atlas-development-270609;OAuthType=0;OAuthServiceAcctEmail=146473670970-compute@developer.gserviceaccount.com;OAuthPvtKeyPath=/Users/javier/keys/atlas-development-270609-410deaacc58b.json;Timeout=100000;)"
-    pathToDriver: "/Users/javier/.config/hades"
+    connectionString: jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;ProjectId=atlas-development-270609;OAuthType=0;OAuthServiceAcctEmail=146473670970-compute@developer.gserviceaccount.com;OAuthPvtKeyPath=/Users/javier/keys/atlas-development-270609-410deaacc58b.json;Timeout=100000;
+    pathToDriver: /Users/javier/.config/hades/bigquery
   schemas:
+    tempEmulationSchema: "atlas-development-270609.sandbox" #optional
     vocab: "atlas-development-270609.finngen_omop_r11"
     CDM: "atlas-development-270609.finngen_omop_r11"
     scratch: "atlas-development-270609.sandbox"

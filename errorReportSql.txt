@@ -2,10 +2,14 @@ DBMS:
 bigquery
 
 Error:
-java.sql.SQLException: [Simba][BigQueryJDBCDriver](100032) Error executing query job. Message: EXEC_JOB_EXECUTION_ERR
+java.sql.SQLException: [Simba][BigQueryJDBCDriver](100032) Error executing query job. Message: Already Exists: Table atlas-development-270609:sandbox.tqmtu33dcohort_data
 
 SQL:
-SELECT  * from finngen_omop_r11.cdm_source LIMIT 1000;
+CREATE TABLE atlas-development-270609.sandbox.tqmtu33dcohort_data  AS
+SELECT
+cohort_name,cohort_definition_id,cohort_start_date,cohort_end_date 
+FROM
+atlas-development-270609.sandbox.tqmtu33dndortnbtbfveyptipixx
 
 R version:
 R version 4.3.0 (2023-04-21)
@@ -24,3 +28,4 @@ Attached base packages:
 
 Other attached packages:
 - HadesExtras (0.0.0.9000)
+- RSQLite (2.3.1)

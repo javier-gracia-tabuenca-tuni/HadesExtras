@@ -14,37 +14,25 @@
 
 createCohortTables <- function(connectionDetails, schema, cohort_table_name) {
 
-
   cohort_names_table_name <- paste0(cohort_table_name, "_names")
 
   connection <- DatabaseConnector::connect(connectionDetails)
 
-  if(DatabaseConnector::existsTable(connection, schema, cohort_table_name) &
-     DatabaseConnector::existsTable(connection, schema, cohort_names_table_name)){
-     DatabaseConnector::disconnect(connection)
-    return(FALSE)
-  }
+ sql <- SqlRender::readSql(system.file("sql/sql_server/CreateCohortTables.sql", package = "HadesExtras", mustWork = TRUE))
+    sql <- SqlRender::render(
+      sql = sql,
+      cohort_database_schema = schema,
+      cohort_table = cohort_table_name,
+      cohort_name_table = cohort_names_table_name,
+      warnOnMissingParameters = TRUE
+    )
+    sql <- SqlRender::translate(
+      sql = sql,
+      targetDialect = connection@dbms
+    )
+    DatabaseConnector::executeSql(connection, sql, progressBar = FALSE, reportOverallTime = FALSE)
 
-  cohort_table <- tibble::tibble(
-    cohort_definition_id = as.integer(NA),
-    subject_id = as.integer(NA),
-    cohort_start_date = as.Date(NA),
-    cohort_end_date = as.Date(NA),
-    .rows = NULL
-  )
-
-  DatabaseConnector::insertTable(connection, schema, cohort_table_name, cohort_table)
-
-  cohort_names_table <- tibble::tibble(
-    cohort_definition_id = as.integer(NA),
-    cohort_name = as.character(NA),
-    atlas_cohort_definition_id = as.integer(NA),
-    .rows = NULL
-  )
-
-  DatabaseConnector::insertTable(connection, schema, cohort_names_table_name, cohort_names_table)
-
-  connection <- DatabaseConnector::connect(connectionDetails)
+    DatabaseConnector::disconnect(connection)
 
   return(TRUE)
 

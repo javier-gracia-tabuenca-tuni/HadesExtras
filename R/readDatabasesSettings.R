@@ -70,6 +70,14 @@ readDatabaseSettings <- function(path_databases_settings_yalm, database_name) {
 
   database_settings$connectionDetails <- connectionDetails
 
+  # set tempEmulationSchema if in config
+  if( "tempEmulationSchema" %in% names(database_settings$schemas)){
+    options(sqlRenderTempEmulationSchema = database_settings$schemas$tempEmulationSchema)
+  }
+
+
+
+
   return(database_settings)
 }
 
@@ -107,7 +115,8 @@ checkDatabaseSettings <- function(database_settings) {
 
   # Check connection
   e <- tryCatch({
-
+    connection <- DatabaseConnector::connect(database_settings$connectionDetails)
+    DatabaseConnector::disconnect(connection)
   }, error=function(cond){ return(cond$message)})
 
   database_settings_checks <-  database_settings_checks |>
