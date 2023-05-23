@@ -6,7 +6,7 @@ dev_eunomia:
     CDM: main
     scratch: main
   tables:
-    workbench_cohort_table: workbench_cohort_table
+    cohort_table: cohort_table
 dev_bigquery:
   connectionDetails:
     dbms: bigquery
@@ -20,4 +20,4 @@ dev_bigquery:
     CDM: "atlas-development-270609.finngen_omop_r11"
     scratch: "atlas-development-270609.sandbox"
   tables:
-    workbench_cohort_table: workbench_cohort_table
+    cohort_table: cohort_table

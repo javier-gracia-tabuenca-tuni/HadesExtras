@@ -76,6 +76,8 @@ readDatabaseSettings <- function(path_databases_settings_yalm, database_name) {
   }
 
 
+  # add cohort_names_table_name
+  database_settings$tables$cohort_names_table <- paste0(database_settings$tables$cohort_table, "_names")
 
 
   return(database_settings)
@@ -157,7 +159,7 @@ checkDatabaseSettings <- function(database_settings) {
   # Check tables
   cohort_table_created <- FALSE
   e <- tryCatch({
-    cohort_table_created <- createCohortTables(database_settings$connectionDetails, database_settings$schemas$scratch, database_settings$tables$workbench_cohort_table)
+    cohort_table_created <- createCohortTables(database_settings)
   }, error=function(cond){ return(cond$message)})
 
   database_settings_checks <-  database_settings_checks |>

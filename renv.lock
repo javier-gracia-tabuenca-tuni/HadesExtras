@@ -160,16 +160,16 @@
       "Source": "GitHub",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
-      "RemoteUsername": "OHDSI",
+      "RemoteUsername": "javier-gracia-tabuenca-tuni",
       "RemoteRepo": "SqlRender",
-      "RemoteRef": "develop",
-      "RemoteSha": "62616b12ca227d35f28e09d3b648f49db5051bdc",
+      "RemoteRef": "fix_issue_233_in_DatabaseConnector",
+      "RemoteSha": "7ac841a12b038a8aed8b10894b8d3e713acf66bb",
       "Requirements": [
         "checkmate",
         "rJava",
         "rlang"
       ],
-      "Hash": "85433779df28eac1297127e9a10aa1c6"
+      "Hash": "60de38fea17de3a2e94d1073a1e4e927"
     },
     "askpass": {
       "Package": "askpass",
@@ -380,9 +380,14 @@
     },
     "dbplyr": {
       "Package": "dbplyr",
-      "Version": "2.3.2",
-      "Source": "Repository",
-      "Repository": "CRAN",
+      "Version": "2.3.2.9000",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "tidyverse",
+      "RemoteRepo": "dbplyr",
+      "RemoteRef": "f607ef16a4a0edbd3cf187e61f4c0d92e130957c",
+      "RemoteSha": "f607ef16a4a0edbd3cf187e61f4c0d92e130957c",
       "Requirements": [
         "DBI",
         "R",
@@ -404,7 +409,7 @@
         "vctrs",
         "withr"
       ],
-      "Hash": "d24305b92db333726aed162a2c23a147"
+      "Hash": "9f6f3ed24fd815d57f2e081d0df0bb79"
     },
     "desc": {
       "Package": "desc",

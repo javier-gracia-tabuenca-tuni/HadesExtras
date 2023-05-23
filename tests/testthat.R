@@ -9,4 +9,6 @@
 library(testthat)
 library(HadesExtras)
 
+# chose database settings to tests
+options(test_database_settings_name = "dev_eunomia")
 test_check("HadesExtras")
