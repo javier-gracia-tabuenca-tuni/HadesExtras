@@ -1,76 +1,80 @@
 
 
 
-helper_getDatabaseSettings <- function(change_cohort_table = NULL){
+helper_getDatabaseSettings <- function(){
   database_settings <- readDatabaseSettings(
     path_databases_settings_yalm = testthat::test_path("config", "test_config.yml"),
-    database_name = getOption("test_database_settings_name", default = "dev_eunomia"))
-
-  if(!is.null(change_cohort_table)){
-    database_settings$tables$cohort_table <- change_cohort_table
-    database_settings$tables$cohort_names_table <- paste0(change_cohort_table, "_names")
-  }
-
+    database_name = getOption("test_database_settings_name", default = "dev_bigquery")
+  )
   return(database_settings)
 }
 
 
 
 helper_createCohortTableWithTestData <- function(
-    database_settings,
-    cohort_names,
-    n_persons = 5,
-    base_start_date = "2000-01-01",
-    base_end_date = "2020-01-01"
+    connection,
+    cohortDatabaseSchema,
+    cohortTableNames = getCohortTableNames(),
+    testCohortNames,
+    numberPersonsPerCohort = 5,
+    baseStartDate = "2000-01-01",
+    baseEndDate = "2020-01-01"
     ){
 
-  # get settings
-  n_cohorts <- length(cohort_names)
+  numberCohorts <- length(testCohortNames)
 
   # create tables, drop if exists
-  createCohortTables(database_settings)
-
-  # Connect, collect tables
-  connection <- DatabaseConnector::connect(database_settings$connectionDetails)
-
-  # writes data to cohort_names_table
-  test_cohort_names_table <- tibble::tibble(
-    cohort_definition_id = 1:n_cohorts,
-    cohort_name = cohort_names,
-    atlas_cohort_definition_id = as.integer(rep(NA, n_cohorts))
+  createCohortTables(
+    connection = connection,
+    cohortDatabaseSchema = cohortDatabaseSchema,
+    cohortTableNames = cohortTableNames
   )
 
-  DatabaseConnector::dbWriteTable(connection, database_settings$tables$cohort_names_table, test_cohort_names_table, overwrite = TRUE)
-
-  # writes data to cohort_table
-  test_cohort_table <- tibble::tibble(
-    cohort_definition_id = rep(1:n_cohorts,n_persons) |> sort(),
-    subject_id = 1:(n_cohorts*n_persons),
-    cohort_start_date = as.Date(rep(base_start_date, n_cohorts*n_persons))+subject_id,
-    cohort_end_date = as.Date(rep(base_end_date, n_cohorts*n_persons))+subject_id
+  # create test data
+  testCohortTable <- tibble::tibble(
+    cohort_definition_id = rep(1:numberCohorts, numberPersonsPerCohort) |> sort(),
+    subject_id = 1:( numberCohorts * numberPersonsPerCohort ),
+    cohort_start_date = as.Date(rep(baseStartDate, numberCohorts * numberPersonsPerCohort )) + subject_id,
+    cohort_end_date = as.Date(rep(baseEndDate, numberCohorts * numberPersonsPerCohort )) + subject_id
   )
 
-  DatabaseConnector::dbWriteTable(connection, database_settings$tables$cohort_table, test_cohort_table, overwrite = TRUE)
+  testCohortInfoTable <- tibble::tibble(
+    cohort_definition_id = 1:numberCohorts,
+    cohort_name = testCohortNames,
+    atlas_cohort_definition_id = as.integer(rep(NA, numberCohorts))
+  )
 
-  DatabaseConnector::disconnect(connection)
+  # append test data to tables
+  dplyr::rows_append(
+    dplyr::tbl(connection, tmp_inDatabaseSchema(cohortDatabaseSchema, cohortTableNames$cohortTable)),
+    dplyr::copy_to(connection, testCohortTable),
+    in_place = TRUE
+  )
+
+  dplyr::rows_append(
+    dplyr::tbl(connection, tmp_inDatabaseSchema(cohortDatabaseSchema, cohortTableNames$cohortInfoTable)),
+    dplyr::copy_to(connection,testCohortInfoTable),
+    in_place = TRUE
+  )
+
 }
 
 
-helper_getSourcePersonIdFromPersonId  <- function(database_settings, person_ids){
+helper_getParedSourcePersonAndPersonIds  <- function(connection,
+                                                     cohortDatabaseSchema,
+                                                     numberPersons){
 
   # Connect, collect tables
-  connection <- DatabaseConnector::connect(database_settings$connectionDetails)
-  person_table <- dplyr::tbl(connection, tmp_inDatabaseSchema(database_settings$schemas$CDM, "person"))
+  personTable <- dplyr::tbl(connection, tmp_inDatabaseSchema(cohortDatabaseSchema, "person"))
 
   # get first n persons
-  source_person_ids  <- person_table  |> dplyr::filter(person_id %in% person_ids) |>
+  pairedSourcePersonAndPersonIds  <- personTable  |>
     dplyr::arrange(person_id) |>
-    dplyr::pull(person_source_value)
+    dplyr::select(person_id, person_source_value) |>
+    dplyr::collect(n=numberPersons)
 
-  #disconnect
-  DatabaseConnector::disconnect(connection)
 
-  return(source_person_ids)
+  return(pairedSourcePersonAndPersonIds)
 }
 
 

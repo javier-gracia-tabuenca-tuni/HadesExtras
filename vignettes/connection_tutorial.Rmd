@@ -40,6 +40,18 @@ checkDatabaseSettings(database_settings)
 ```
 
 
+
+```{r}
+
+a <- CohortTableHandler$new(
+  database_settings$connectionDetails, 
+  database_settings$schemas$vocab,
+  database_settings$schemas$CDM,
+  database_settings$schemas$scratch
+  )
+
+```
+
 # load ids 
 
 ```{r}
