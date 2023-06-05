@@ -32,7 +32,7 @@ readDatabasesNames(path_databases_settings_yalm)
 
 ```{r}
 database_settings <- readDatabaseSettings(path_databases_settings_yalm, "dev_eunomia")
-#database_settings <- readDatabaseSettings(path_databases_settings_yalm, "dev_bigquery")
+database_settings <- readDatabaseSettings(path_databases_settings_yalm, "dev_bigquery")
 ```
 
 ```{r}
@@ -43,11 +43,20 @@ checkDatabaseSettings(database_settings)
 
 ```{r}
 
-a <- CohortTableHandler$new(
-  database_settings$connectionDetails, 
-  database_settings$schemas$vocab,
-  database_settings$schemas$CDM,
-  database_settings$schemas$scratch
+cdmconnection <- CDMConnectionHandler$new(
+  connectionDetails = database_settings$connectionDetails, 
+  cdmDatabaseSchema = database_settings$schemas$CDM,
+  scracthDatabaseSchema = database_settings$schemas$scratch
+  )
+
+```
+
+
+
+```{r}
+
+cohortTableObj <- CohortTableHandler$new( 
+  cdmConnectionHandler = cdmconnection, cohortTable = "test_cohort_table"
   )
 
 ```

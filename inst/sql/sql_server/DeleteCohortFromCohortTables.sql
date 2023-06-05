@@ -6,7 +6,3 @@ WHERE cohort_definition_id IN (
     FROM @cohort_database_schema.@cohort_name_table
     WHERE cohort_name IN @cohort_names_to_delete
 );
-
--- Delete cohorts from cohort name table
-DELETE FROM @cohort_database_schema.@cohort_name_table
-WHERE cohort_name IN @cohort_names_to_delete;

@@ -1,15 +1,13 @@
 DBMS:
-bigquery
+sqlite
 
 Error:
-java.sql.SQLException: [Simba][BigQueryJDBCDriver](100032) Error executing query job. Message: Already Exists: Table atlas-development-270609:sandbox.fpav5zqncohortdata
+no such table: main.episode_event
 
 SQL:
-CREATE TABLE atlas-development-270609.sandbox.fpav5zqncohortdata  AS
-SELECT
-cohort_name,person_source_value,cohort_start_date,cohort_end_date,cohort_definition_id 
-FROM
-atlas-development-270609.sandbox.fpav5zqntbuxuffmfqoiaewmxuzj
+SELECT *
+FROM main.episode_event AS q25
+WHERE (0 = 1);
 
 R version:
 R version 4.3.0 (2023-04-21)
@@ -27,7 +25,6 @@ Attached base packages:
 - base
 
 Other attached packages:
+- dplyr (1.1.2)
 - HadesExtras (0.0.0.9000)
-- checkmate (2.2.0)
 - testthat (3.1.8)
-- RSQLite (2.3.1)
