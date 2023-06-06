@@ -8,7 +8,7 @@
 #' @field cdmDatabaseSchema A string with the name of the CDM database schema.
 #' @field scracthDatabaseSchema A string with the name of a read-write schema.
 #' @field tempEmulationSchema A string with the name of the temporary emulation schema.
-#' @field vocabInfo Information about the vocabulary database.
+#' @field vocabularyInfo Information about the vocabulary database.
 #' @field cdmInfo Information about the CDM database.
 #' @field connectionStatus The connection status.
 #'
@@ -24,12 +24,10 @@ CDMConnectionHandler <- R6::R6Class(
     connectionHandler = NULL,
     vocabularyDatabaseSchema = NULL,
     cdmDatabaseSchema = NULL,
-    scracthDatabaseSchema = NULL,
-    tempEmulationSchema = NULL,
-    #
-    vocabInfo = NULL,
-    cdmInfo = NULL,
     connectionStatus = NULL,
+    #
+    vocabularyInfo = NULL,
+    CDMInfo = NULL,
     #
     vocabularyTbl = NULL,
     cdmTbl = NULL,
@@ -39,47 +37,23 @@ CDMConnectionHandler <- R6::R6Class(
     #` @param cdmDatabaseSchema             A string with the name of the CDM database schema
     #` @param scracthDatabaseSchema         A string with the name of of a read write schema
     initialize = function(
-    connectionDetails = NULL,
-    cdmDatabaseSchema = NULL,
-    vocabularyDatabaseSchema = cdmDatabaseSchema,
-    scracthDatabaseSchema = NULL,
-    tempEmulationSchema = scracthDatabaseSchema,
-    usePooledConnection = FALSE,
-    ...
+    connectionHandler,
+    cdmDatabaseSchema,
+    vocabularyDatabaseSchema = cdmDatabaseSchema
     ) {
 
-      checkmate::assertClass(connectionDetails, "ConnectionDetails", null.ok = TRUE)
+      checkmate::assertClass(connectionHandler, "connectionHandler")
       checkmate::assertString(cdmDatabaseSchema)
       checkmate::assertString(vocabularyDatabaseSchema)
-      checkmate::assertString(scracthDatabaseSchema)
-      checkmate::assertString(tempEmulationSchema)
-      checkmate::assertLogical(usePooledConnection)
-
-
-
-      if (usePooledConnection) {
-        stop("not implemented")
-        self$connectionHandler <- ResultModelManager::PooledConnectionHandler$new(connectionDetails, loadConnection = FALSE, ...)
-      } else {
-        self$connectionHandler <- tmp_ConnectionHandler$new(connectionDetails, loadConnection = FALSE, ...)
-      }
 
       self$vocabularyDatabaseSchema <- vocabularyDatabaseSchema
       self$cdmDatabaseSchema <- cdmDatabaseSchema
-      self$scracthDatabaseSchema <- scracthDatabaseSchema
-      self$tempEmulationSchema <- tempEmulationSchema
 
-      options(sqlRenderTempEmulationSchema = scracthDatabaseSchema)
-
-      self$updateConnectionStatus()
-
+      self$updateConnection()
 
       lockBinding("connectionHandler", self)
       lockBinding("vocabularyDatabaseSchema", self)
       lockBinding("cdmDatabaseSchema", self)
-      lockBinding("scracthDatabaseSchema", self)
-      lockBinding("tempEmulationSchema", self)
-      lockBinding("vocabularyTbl", self)
 
     },
 
@@ -93,29 +67,17 @@ CDMConnectionHandler <- R6::R6Class(
     #' Update connection status
     #' @description
     #' Updates the connection status by checking the database connection, vocabulary database schema, and CDM database schema.
-    updateConnectionStatus = function(){
+    updateConnection = function(){
 
       connectionStatus <- logTibble_NewLog()
 
-      # Check connection
-      errorMessage <- ""
-      tryCatch({
-        self$connectionHandler$initConnection()
-      }, error=function(error){ errorMessage <<- error$message})
-
-      if(errorMessage != "" | !self$connectionHandler$dbIsValid()){
-        connectionStatus <- logTibble_ERROR(connectionStatus, "Database Connection", errorMessage)
-      }else{
-        connectionStatus <- logTibble_INFO(connectionStatus, "Database Connection", "Valid connection")
-      }
-
       # Check vocabularyDatabaseSchema
       vocabularyTbl <- list()
-      vocabInfo <- NULL
+      vocabularyInfo <- NULL
       errorMessage <- ""
       tryCatch({
         # create dbplyr object for all tables in the vocabulary
-        vocabTableNames <- c(
+        vocabularyTableNames <- c(
           "concept",
           "vocabulary",
           "domain",
@@ -128,11 +90,15 @@ CDMConnectionHandler <- R6::R6Class(
           "drug_strength"
         )
 
-        for (tableName in vocabTableNames) {
-          try( vocabularyTbl[[tableName]] <- self$connectionHandler$tbl(tableName, self$vocabularyDatabaseSchema) )
+        tablesInVocabularyDatabaseSchema <- DatabaseConnector::getTableNames(self$connectionHandler$getConnection(), self$vocabularyDatabaseSchema)
+
+        vocabularyTablesInVocabularyDatabaseSchema <- intersect(vocabularyTableNames, tablesInVocabularyDatabaseSchema)
+
+        for (tableName in vocabularyTablesInVocabularyDatabaseSchema) {
+          vocabularyTbl[[paste0("getTbl_",tableName)]] <- function(){self$connectionHandler$tbl(tableName, self$vocabularyDatabaseSchema)}
         }
 
-        vocabInfo <- vocabularyTbl$vocabulary |>
+        vocabularyInfo <- vocabularyTbl$vocabulary |>
           dplyr::filter(vocabulary_id == "None") |>
           dplyr::select(vocabulary_name, vocabulary_version) |>
           dplyr::collect( n = 1)
@@ -142,8 +108,8 @@ CDMConnectionHandler <- R6::R6Class(
         connectionStatus <- logTibble_ERROR(connectionStatus, "vocabularyDatabaseSchema connection", errorMessage)
       }else{
         connectionStatus <- logTibble_INFO(connectionStatus, "vocabularyDatabaseSchema connection",
-                                           "Connected to vocabulary:", vocabInfo$vocabulary_name,
-                                           "Version: ", vocabInfo$vocabulary_version)
+                                           "Connected to vocabulary:", vocabularyInfo$vocabulary_name,
+                                           "Version: ", vocabularyInfo$vocabulary_version)
       }
 
 
@@ -183,8 +149,12 @@ CDMConnectionHandler <- R6::R6Class(
           "cdm_source"
         )
 
-        for (tableName in cdmTableNames) {
-          try( cdmTbl[[tableName]] <- self$connectionHandler$tbl(tableName, self$cdmDatabaseSchema), silent = T )
+        tablesInCdmDatabaseSchema <- DatabaseConnector::getTableNames(self$connectionHandler$getConnection(), self$cdmDatabaseSchema)
+
+        vocabularyTablesInCdmDatabaseSchema <- intersect(cdmTableNames, tablesInCdmDatabaseSchema)
+
+        for (tableName in vocabularyTablesInCdmDatabaseSchema) {
+          CDMTbl[[paste0("getTbl_",tableName)]] <- function(){self$connectionHandler$tbl(tableName, self$cdmDatabaseSchema)}
         }
 
         cdmInfo <- cdmTbl$cdm_source |>
@@ -199,42 +169,18 @@ CDMConnectionHandler <- R6::R6Class(
                                            "Connected to cdm:", cdmInfo$cdm_source_name, "Version: ", cdmInfo$ cdm_version )
       }
 
-      # TODO: Check scracthDatabaseSchema is writble
-      errorMessage <- ""
-      tryCatch({
-        self$connectionHandler$executeSql(
-          sql = "IF OBJECT_ID('@scracthDatabaseSchema.write_test', 'U') IS NOT NULL
-                  DROP TABLE @scracthDatabaseSchema.write_test;
-                  CREATE TABLE @scracthDatabaseSchema.write_test (test INT);
-                  INSERT INTO @scracthDatabaseSchema.write_test (test)
-                  VALUES (5);",
-          scracthDatabaseSchema = self$scracthDatabaseSchema)
-
-
-        self$connectionHandler$executeSql(
-          sql =  "IF OBJECT_ID('@scracthDatabaseSchema.write_test', 'U') IS NOT NULL DROP TABLE @scracthDatabaseSchema.write_test;",
-          scracthDatabaseSchema = self$scracthDatabaseSchema
-        )
-      }, error=function(error){ errorMessage <<- error$message})
-
-      if(errorMessage != "" ){
-        connectionStatus <- logTibble_ERROR(connectionStatus, "scracthDatabaseSchema connection", errorMessage)
-      }else{
-        connectionStatus <- logTibble_INFO(connectionStatus, "scracthDatabaseSchema connection", "scracthDatabaseSchema is writable")
-      }
-
-      #       # update status
-      unlockBinding("vocabInfo", self)
+      # update status
+      unlockBinding("vocabularyInfo", self)
       unlockBinding("cdmInfo", self)
       unlockBinding("connectionStatus", self)
       unlockBinding("vocabularyTbl", self)
       unlockBinding("cdmTbl", self)
-      self$vocabInfo <- vocabInfo
+      self$vocabularyInfo <- vocabularyInfo
       self$cdmInfo <- cdmInfo
       self$connectionStatus <- connectionStatus
       self$vocabularyTbl <- vocabularyTbl
       self$cdmTbl <- cdmTbl
-      lockBinding("vocabInfo", self)
+      lockBinding("vocabularyInfo", self)
       lockBinding("cdmInfo", self)
       lockBinding("connectionStatus", self)
       lockBinding("vocabularyTbl", self)
