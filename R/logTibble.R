@@ -26,7 +26,7 @@ logTibble_ERROR  <- function(log, step, message, ...){
 }
 
 .logTibble_add  <- function(log, type, step, message, ...){
-    log <- log %>%
+    log <- log  |>
         dplyr::add_row(
             type = factor(type, levels = c("INFO", "WARNING", "ERROR")),
             step = step,
