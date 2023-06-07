@@ -5,7 +5,7 @@
 CohortTableHandler <- R6::R6Class(
   classname = "CohortTableHandler",
   private = list(
-    cohortDefinitionSet = NULL,
+    cohortDefinitionSet = NULL
   ),
   public = list(
     # connection parameters
@@ -22,7 +22,7 @@ CohortTableHandler <- R6::R6Class(
     initialize = function(
       connectionHandler,
       cohortDatabaseSchema,
-      cohortTableName,
+      cohortTableName
     ) {
       self$cdmConnectionHandler <- cdmConnectionHandler
       self$cohortTableNames <- CohortGenerator::getCohortTableNames(cohortTableName)
