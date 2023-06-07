@@ -9,7 +9,7 @@
 #' @field scracthDatabaseSchema A string with the name of a read-write schema.
 #' @field tempEmulationSchema A string with the name of the temporary emulation schema.
 #' @field vocabularyInfo Information about the vocabulary database.
-#' @field cdmInfo Information about the CDM database.
+#' @field CDMInfo Information about the CDM database.
 #' @field connectionStatus The connection status.
 #'
 #' @importFrom ResultModelManager PooledConnectionHandler ConnectionHandler
@@ -115,7 +115,7 @@ CDMConnectionHandler <- R6::R6Class(
 
       # Check cdmDatabaseSchema
       cdmTbl <- list()
-      cdmInfo <-  NULL
+      CDMInfo <-  NULL
       errorMessage <- ""
       tryCatch({
 
@@ -157,7 +157,7 @@ CDMConnectionHandler <- R6::R6Class(
           CDMTbl[[paste0("getTbl_",tableName)]] <- function(){self$connectionHandler$tbl(tableName, self$cdmDatabaseSchema)}
         }
 
-        cdmInfo <- cdmTbl$cdm_source |>
+        CDMInfo <- cdmTbl$cdm_source |>
           dplyr::select(cdm_source_name, cdm_source_abbreviation,  cdm_version ) |>
           dplyr::collect( n = 1)
       }, error=function(error){ errorMessage <<- error$message})
@@ -166,7 +166,7 @@ CDMConnectionHandler <- R6::R6Class(
         connectionStatus <- logTibble_ERROR(connectionStatus, "cdmDatabaseSchema connection", errorMessage)
       }else{
         connectionStatus <- logTibble_INFO(connectionStatus, "cdmDatabaseSchema connection",
-                                           "Connected to cdm:", cdmInfo$cdm_source_name, "Version: ", cdmInfo$ cdm_version )
+                                           "Connected to cdm:", CDMInfo$cdm_source_name, "Version: ", CDMInfo$ cdm_version )
       }
 
       # update status
