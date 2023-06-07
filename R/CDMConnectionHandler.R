@@ -176,7 +176,7 @@ CDMConnectionHandler <- R6::R6Class(
       unlockBinding("vocabularyTbl", self)
       unlockBinding("cdmTbl", self)
       self$vocabularyInfo <- vocabularyInfo
-      self$cdmInfo <- cdmInfo
+      self$CDMInfo <- CDMInfo
       self$connectionStatus <- connectionStatus
       self$vocabularyTbl <- vocabularyTbl
       self$cdmTbl <- cdmTbl
