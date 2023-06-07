@@ -5,7 +5,8 @@
 createConnectionHandler  <- function(
     connectionDetailsSettings,
     tempEmulationSchema = NULL,
-    usePooledConnection = FALSE
+    usePooledConnection = FALSE,
+    ...
 ){
 
   #
