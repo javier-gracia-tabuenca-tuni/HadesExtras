@@ -42,7 +42,7 @@ CDMConnectionHandler <- R6::R6Class(
     vocabularyDatabaseSchema = cdmDatabaseSchema
     ) {
 
-      checkmate::assertClass(connectionHandler, "tmp_connectionHandler")
+      checkmate::assertClass(connectionHandler, "ConnectionHandler")
       checkmate::assertString(cdmDatabaseSchema)
       checkmate::assertString(vocabularyDatabaseSchema)
 
