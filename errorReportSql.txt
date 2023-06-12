@@ -2,12 +2,10 @@ DBMS:
 sqlite
 
 Error:
-no such table: main.episode_event
+near "WRONG": syntax error
 
 SQL:
-SELECT *
-FROM main.episode_event AS q25
-WHERE (0 = 1);
+DELETE WRONG main.test_cohort_table where cohort_definition_id = 10
 
 R version:
 R version 4.3.0 (2023-04-21)
@@ -25,6 +23,5 @@ Attached base packages:
 - base
 
 Other attached packages:
-- dplyr (1.1.2)
 - HadesExtras (0.0.0.9000)
 - testthat (3.1.8)

@@ -1,8 +1,24 @@
 
-
-
-
-createConnectionHandler  <- function(
+#' createConnectionHandler
+#'
+#' Creates a connection handler object based on the provided connection details settings.
+#'
+#' @param connectionDetailsSettings A list of connection details settings to pass directly to DatabaseConnector::createConnectionDetails.
+#' @param tempEmulationSchema The temporary emulation schema (optional).
+#' @param usePooledConnection Logical indicating whether to use a pooled connection (default is FALSE).
+#' @param ... Additional arguments to be passed to the connection handler object.
+#'
+#' @importFrom checkmate assertList assertCharacter assertLogical
+#' @importFrom Eunomia getEunomiaConnectionDetails
+#' @importFrom rlang exec
+#' @importFrom DatabaseConnector createConnectionDetails
+#' @importFrom ResultModelManager PooledConnectionHandler
+#' @importFrom tmp_ConnectionHandler tmp_ConnectionHandler
+#'
+#' @return A connection handler object.
+#'
+#' @export
+ResultModelManager_createConnectionHandler  <- function(
     connectionDetailsSettings,
     tempEmulationSchema = NULL,
     usePooledConnection = FALSE,
@@ -12,7 +28,9 @@ createConnectionHandler  <- function(
   #
   # Check parameters
   #
-    checkmate::assertList(connectionDetailsSettings)
+  checkmate::assertList(connectionDetailsSettings)
+  checkmate::assertCharacter(tempEmulationSchema, null.ok = TRUE)
+  checkmate::assertLogical(usePooledConnection, null.ok = TRUE)
 
   #
   # function
@@ -26,53 +44,18 @@ createConnectionHandler  <- function(
 
   # set tempEmulationSchema if in config
   if(!is.null(tempEmulationSchema)){
-    options(sqlRenderTempEmulationSchema = database_settings$schemas$tempEmulationSchema)
+    options(sqlRenderTempEmulationSchema = tempEmulationSchema)
   }
 
 
-   if (usePooledConnection) {
+  if (usePooledConnection) {
     stop("not implemented")
     connectionHandler <- ResultModelManager::PooledConnectionHandler$new(connectionDetails, loadConnection = FALSE, ...)
-    } else {
+  } else {
     connectionHandler <- tmp_ConnectionHandler$new(connectionDetails, loadConnection = FALSE, ...)
-    }
+  }
 
-   return(connectionHandler)
-
-}
-
-
-
-getConnectionHanderConnectionStatus  <- function(
-    connectionHandler
-){
-
-    connectionStatus <- logTibble_NewLog()
-
-    # Check connection
-      errorMessage <- ""
-      tryCatch({
-        connectionHandler$initConnection()
-      }, error=function(error){ errorMessage <<- error$message})
-
-      if(errorMessage != "" | !connectionHandler$dbIsValid()){
-        connectionStatus <- logTibble_ERROR(connectionStatus, "Database Connection", errorMessage)
-      }else{
-        connectionStatus <- logTibble_INFO(connectionStatus, "Database Connection", "Valid connection")
-      }
-
-    # TODO: Check can create temp tables in tempEmulationSchema
-       errorMessage <- ""
-       tryCatch({
-            connectionHandler$getConnection()  |>
-                dplyr::copy_to(cars, overwrite = TRUE)
-            DatabaseConnector::dropEmulatedTempTables(connection)
-        }, error=function(error){ errorMessage <<- error$message})
-
-      if(errorMessage != "" ){
-        connectionStatus <- logTibble_WARNING(connectionStatus, "temp table creation", errorMessage)
-      }else{
-        connectionStatus <- logTibble_INFO(connectionStatus, "temp table creation", "can create temp tables")
-      }
+  return(connectionHandler)
 
 }
+

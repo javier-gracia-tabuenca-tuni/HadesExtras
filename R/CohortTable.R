@@ -1,6 +1,55 @@
 
 
 
+CohortGenerator_generateCohortDefinitionSetToImportFromExternalCohortTable <- function(
+      externalCohortDatabaseSchema,
+      externalCohortTableName,
+      externalCohortIds,
+      externalCohortNames,
+      offsetCohortId = 0,
+      isFromAtlasCohortTable = FALSE
+){
+
+  checkmate::assertCharacter(externalCohortDatabaseSchema, len = 1)
+  checkmate::assertCharacter(externalCohortTableName, len = 1)
+  checkmate::assertInteger(externalCohortIds, )
+  checkmate::assertCharacter(externalCohortNames)
+  checkmate::assertInt(offsetCohortId)
+  checkmate::assertLogical(isFromAtlasCohortTable)
+
+
+  cohortDefinitionSet <- CohortGenerator::createEmptyCohortDefinitionSet() |> tibble::as_tibble()
+
+  for(i in 1:length(externalCohortIds)){
+    cohortId <- externalCohortIds[i]
+    cohortName <- externalCohortNames[i]
+
+    # Function
+    sql <- SqlRender::readSql(system.file("sql/sql_server/ImportCohortTable.sql", package = "HadesExtras", mustWork = TRUE))
+    sql <- SqlRender::render(
+      sql = sql,
+      external_cohort_database_schema = externalCohortDatabaseSchema,
+      external_cohort_table_name = externalCohortTableName,
+      external_cohort_id = cohortId,
+      warnOnMissingParameters = FALSE
+    )
+
+    cohortDefinitionSet <- dplyr::bind_rows(
+      cohortDefinitionSet,
+      tibble::tibble(
+        cohortId = cohortId + offsetCohortId,
+        cohortName = cohortName,
+        sql = sql,
+        json = ""
+      )
+    )
+  }
+
+  return(cohortDefinitionSet)
+}
+
+
+
 
 appendCohortDataToCohortTable <- function(connectionDetails = NULL,
                                           connection = NULL,
@@ -16,7 +65,6 @@ appendCohortDataToCohortTable <- function(connectionDetails = NULL,
     stop("You must provide either a database connection or the connection details.")
   }
 
-  start <- Sys.time()
   if (is.null(connection)) {
     connection <- DatabaseConnector::connect(connectionDetails)
     on.exit(DatabaseConnector::disconnect(connection))

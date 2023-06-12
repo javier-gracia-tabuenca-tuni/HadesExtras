@@ -1,13 +1,16 @@
 library(testthat)
 library(HadesExtras)
 
+# settings
+configurationName  <- getOption("configurationName", default = "dev_eunomia")
+#configurationName  <- getOption("configurationName", default = "dev_bigquery")
 
-database_settings_name <- getOption("test_database_settings_name", default = "dev_eunomia")
-message("************* Testing on ", database_settings_name, " *************")
-
-# database_settings <- helper_getDatabaseSettings()
 #
-# # creates the cohort tables
-# checkDatabaseSettings(database_settings)
+configurations <- yaml::read_yaml(testthat::test_path("config", "test_config.yml"))
+
+testSelectedConfiguration <- configurations[[configurationName]]
+options(testSelectedConfiguration = testSelectedConfiguration)
+
+message("************* Testing on ", configurationName, " *************")
 
 

@@ -9,9 +9,3 @@
 library(testthat)
 library(checkmate)
 library(HadesExtras)
-
-# chose database settings to tests
-#options(test_database_settings_name = "dev_eunomia")
-options(test_database_settings_name = "dev_bigquery")
-print(getOption("test_database_settings_name"))
-test_check("HadesExtras")

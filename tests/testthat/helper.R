@@ -1,6 +1,43 @@
 
 
 
+helper_getNewCohortTableHandler <- function(){
+  testSelectedConfiguration  <- getOption("testSelectedConfiguration")
+
+  connectionHandler <- ResultModelManager_createConnectionHandler(
+    connectionDetailsSettings = testSelectedConfiguration$connection$connectionDetailsSettings,
+    tempEmulationSchema = testSelectedConfiguration$connection$tempEmulationSchema
+  )
+  cohortTableHandler <- CohortTableHandler$new(
+    connectionHandler = connectionHandler,
+    cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
+    vocabularyDatabaseSchema = testSelectedConfiguration$cdm$vocabularyDatabaseSchema,
+    cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema,
+    cohortTableName = testSelectedConfiguration$cohortTable$cohortTableName
+  )
+  return(cohortTableHandler)
+}
+
+
+
+helper_getErrorFromR6 <- function() {
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 helper_getDatabaseSettings <- function(){
   database_settings <- readDatabaseSettings(
     path_databases_settings_yalm = testthat::test_path("config", "test_config.yml"),
