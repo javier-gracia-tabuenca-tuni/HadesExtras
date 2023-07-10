@@ -18,7 +18,7 @@ devtools::check()
 # # increase version
 pkgdown::build_site()
 
-
+pkgdown::build_site_github_pages()
 
 #rhub::check_for_cran()
 usethis::use_version()
