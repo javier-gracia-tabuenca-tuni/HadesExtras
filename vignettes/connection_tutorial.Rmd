@@ -17,148 +17,175 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-library(HadesExtras)
-options("DEBUG_DATABASECONNECTOR_DBPLYR" = FALSE)
+#library(HadesExtras)
+devtools::load_all(".")
+#options("DEBUG_DATABASECONNECTOR_DBPLYR" = FALSE)
 ```
 
+# Configuration 
+
+We need the following configuration. We write this in yaml format for clarity. 
 
 ```{r}
+config_yaml <- "
+  connection:
+    connectionDetailsSettings:
+        dbms: eunomia
+  cdm:
+      cdmDatabaseSchema: main
+      vocabularyDatabaseSchema: main
+  cohortTable:
+      cohortDatabaseSchema: main
+      cohortTableName: test_cohort_table"
 
-path_databases_settings_yalm <- "./tests/testthat/config/test_config.yml"
-
-readDatabasesNames(path_databases_settings_yalm)
-
+cat(config_yaml)
 ```
 
 ```{r}
-database_settings <- readDatabaseSettings(path_databases_settings_yalm, "dev_eunomia")
-database_settings <- readDatabaseSettings(path_databases_settings_yalm, "dev_bigquery")
+config <- yaml::yaml.load(config_yaml)
 ```
 
 ```{r}
-checkDatabaseSettings(database_settings)
+# configurations <- yaml::read_yaml(testthat::test_path("config", "test_config.yml"))
+# configurationName <- "dev_eunomia"
+# #configurationName <- "dev_eunomia"
+# config <- configurations[[configurationName]]
 ```
 
+# CDMHandled
 
+CDMHandled is a R6 object connected to a OMOP-CDM. 
+It includes attributes and functions to retieve information from the database and wotk with the tables.
 
 ```{r}
-
-cdmconnection <- CDMConnectionHandler$new(
-  connectionDetails = database_settings$connectionDetails, 
-  cdmDatabaseSchema = database_settings$schemas$CDM,
-  scracthDatabaseSchema = database_settings$schemas$scratch
+connectionHandler <- ResultModelManager_createConnectionHandler(
+    connectionDetailsSettings = config$connection$connectionDetailsSettings,
+    tempEmulationSchema = config$connection$tempEmulationSchema
   )
 
-```
-
-
-
-```{r}
-
-cohortTableObj <- CohortTableHandler$new( 
-  cdmConnectionHandler = cdmconnection, cohortTable = "test_cohort_table"
+  CDMdb <- CDMdbHandler$new(
+    connectionHandler = connectionHandler,
+    cdmDatabaseSchema = config$cdm$cdmDatabaseSchema,
+    vocabularyDatabaseSchema = config$cdm$vocabularyDatabaseSchema
   )
-
 ```
 
-# load ids 
+First thing to do is to check the status of the connection. 
+`CDMdb$connectionStatusLog` not only shows if the connection is correct, but also if the `tempEmulationSchema` works, and all the CDM and Vocabulary tables are available in the database.  
+```{r}
+CDMdb$connectionStatusLog
+```
+
+We can get information on the CDM and Vocbulary version: 
+```{r}
+CDMdb$CDMInfo
+```
 
 ```{r}
+CDMdb$vocabularyInfo
+```
 
-cohort_data <- tibble::tibble(
-    cohort_name = c("cohort 1", "cohort 2"),
-    #person_source_value  = c("FG00000001", "FG00000002"),
-    person_source_value = c("001f4a87-70d0-435c-a4b9-1425f6928d33", "052d9254-80e8-428f-b8b6-69518b0ef3f3"),
-    cohort_start_date = as.Date(c("2020-01-01", "2020-01-01")),
-    cohort_end_date = as.Date(c("2020-01-03", "2020-01-04"))
+Tables in the database can be used as if they were tibbles thanks to  [dbplyr](https://dbplyr.tidyverse.org/). 
+```{r}
+CDMdb$getTblCDMSchema$person() |> 
+  dplyr::count(year_of_birth) 
+```
+
+```{r}
+CDMdb$getTblCDMSchema$person() |>
+  ggplot2::ggplot(ggplot2::aes(x=year_of_birth, fill=factor(gender_concept_id))) + 
+    ggplot2::geom_bar()
+```
+
+
+# CohortTableHandler
+
+The CohortTableHandler is an extension of CDMHandled to include the a `cohort` table and the functions to work with this table. 
+
+```{r}
+connectionHandler <- ResultModelManager_createConnectionHandler(
+  connectionDetailsSettings = config$connection$connectionDetailsSettings,
+  tempEmulationSchema = config$connection$tempEmulationSchema
 )
-
-appendCohortDataToCohortTable(database_settings, cohort_data)
-
+cohortTableHandler <- CohortTableHandler$new(
+  connectionHandler = connectionHandler,
+  cdmDatabaseSchema = config$cdm$cdmDatabaseSchema,
+  vocabularyDatabaseSchema = config$cdm$vocabularyDatabaseSchema,
+  cohortDatabaseSchema = config$cohortTable$cohortDatabaseSchema,
+  cohortTableName = config$cohortTable$cohortTableName
+)
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+`cohortTableHandler$connectionStatusLog` includes a check on the creation of the `cohort` table. 
 
 ```{r}
-
-
-options(DEBUG_DATABASECONNECTOR_DBPLYR=TRUE)
-
-connectionDetails <- Eunomia::getEunomiaConnectionDetails()
-connection <- DatabaseConnector::connect(connectionDetails)
-#> Connecting using SQLite driver
-
-person_table <- dplyr::tbl(connection,   DatabaseConnector::inDatabaseSchema("main","person"))
-visit_occurrence_table <- dplyr::tbl(connection,   DatabaseConnector::inDatabaseSchema("main","visit_occurrence"))
-
-
-
-person_table |> 
-  dplyr::select(person_source_value, person_id)|>
-  dplyr::left_join( visit_occurrence_table |>  dplyr::select(person_id, visit_occurrence_id), by="person_id" ) 
+cohortTableHandler$connectionStatusLog
 ```
 
+
+## Add cohors to `cohort` table 
+
+Create tibble of `cohortData` format. See the documentation for the correct format. 
 
 ```{r}
+cohortData <- tibble::tribble(
+  ~cohort_name, ~person_source_value, ~cohort_start_date, ~cohort_end_date,
+  "Cohort A", "000728a7-80de-420a-9286-2c20e81cb7b8", as.Date("2020-01-01"), as.Date("2020-01-03"),
+  "Cohort A", "000cb58f-523d-49a2-a05e-de1e93f35c01", as.Date("2020-01-01"), as.Date("2020-01-03"),
+  "Cohort A", "001f4a87-70d0-435c-a4b9-1425f6928d33", as.Date("2020-01-01"), as.Date("2020-01-03"),
+  "Cohort A", "002805e7-7624-4cb7-b68d-e8ac92f61ff9", as.Date("2020-01-01"), as.Date("2020-01-03"),
+  "Cohort A", "0030eb48-316c-4250-907f-a272909ff8b9", as.Date("2020-01-01"), as.Date("2020-01-03"),
+  "Cohort B", "00093765-abef-4a56-9280-8f92422afae7", as.Date("2020-01-01"), as.Date("2020-01-04"),
+  "Cohort B", "00196a95-1567-41f8-b608-18e6295b4c1e", as.Date("2020-01-01"), as.Date("2020-01-04"),
+  "Cohort B", "00211cd2-f171-45d9-a7c6-ea8ac6d28d09", as.Date("2020-01-01"), as.Date("2020-01-04"),
+  "Cohort B", "0029df47-1263-4576-8ca3-4615adb7dd7a", as.Date("2020-01-01"), as.Date("2020-01-04"),
+  "Cohort B", "00444703-f2c9-45c9-a247-f6317a43a929", as.Date("2020-01-01"), as.Date("2020-01-04")
+)
+```
 
+We can check if the format is correct using `checkCohortData`. See the documentation for the checks
 
-options(DEBUG_DATABASECONNECTOR_DBPLYR=TRUE)
+If correct, It will return TRUE. 
+```{r}
+checkCohortData(cohortData)
+```
 
-connection <- DatabaseConnector::connect(database_settings$connectionDetails)
-#> Connecting using SQLite driver
-
-person_table <- dplyr::tbl(connection,   DatabaseConnector::inDatabaseSchema("atlas-development-270609:finngen_omop_r11","person"))
-visit_occurrence_table <- dplyr::tbl(connection,   DatabaseConnector::inDatabaseSchema("atlas-development-270609:finngen_omop_r11","visit_occurrence"))
-
-
-
-person_table |> 
-  dplyr::select(person_source_value, person_id)|>
-  dplyr::left_join( visit_occurrence_table |>  dplyr::select(person_id, visit_occurrence_id), by="person_id" ) 
+If any error, It will return an array of strings with the errors detected.  
+```{r}
+cohortDataWithErrors <- cohortData
+cohortDataWithErrors[1,1] <- as.character(NA)
+cohortDataWithErrors[1,3] <- as.Date("2030-01-01")
+checkCohortData(cohortDataWithErrors)
 ```
 
 
+To copy the `cohortData` into the `cohort`it has to be converted to a `cohortDefinitionSet`.  
 
+`cohortDefinitionSet` needs a connections to the CDM because it checks if the `person_source_value` exists, and any of the cohort_start_date or cohort_end_date are empty, it will take it from the first or lattes observation period respectively.  
 
+```{r}
+cohortDefinitionSet <- cohortDataToCohortDefinitionSet(
+    connection = cohortTableHandler$connectionHandler$getConnection(),
+    cdmDatabaseSchema = cohortTableHandler$cdmDatabaseSchema,
+    cohortData = cohortData
+  )
+```
 
+Column `extra_info` indicates info on the conversion
+```{r}
+cohortDefinitionSet |> purrr::pluck(5,1)
+```
 
+Copy `cohortDefinitionSet` to `cohort` table 
 
+```{r}
+cohortTableHandler$addCohorts(cohortDefinitionSet)
+```
 
-
-
-
-
-
-
-
-
-
-
+Check it is correct
+```{r}
+cohortTableHandler$getCohortCounts()
+```
 
 
 

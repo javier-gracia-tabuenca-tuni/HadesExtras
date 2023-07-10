@@ -20,6 +20,11 @@ usethis::use_package( "ROhdsiWebApi")
 #
 usethis::use_package( "checkmate")
 usethis::use_package( "yaml")
+usethis::use_package( "validate")
+
+
+usethis::use_package( "devtools", type = "Suggests")
+usethis::use_package( "ggplot2", type = "Suggests")
 
 
 ## Add internal datasets ----

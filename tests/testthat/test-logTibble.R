@@ -1,5 +1,7 @@
-
-test_that("LogTibble class", {
+#
+# LogTibble
+#
+test_that("LogTibble works", {
   log_tibble <- LogTibble$new()
 
   # Test initialization

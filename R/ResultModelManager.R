@@ -13,7 +13,6 @@
 #' @importFrom rlang exec
 #' @importFrom DatabaseConnector createConnectionDetails
 #' @importFrom ResultModelManager PooledConnectionHandler
-#' @importFrom tmp_ConnectionHandler tmp_ConnectionHandler
 #'
 #' @return A connection handler object.
 #'

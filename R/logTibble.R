@@ -9,6 +9,7 @@
 #' @importFrom dplyr add_row
 #'
 #' @export LogTibble
+#'
 LogTibble <- R6::R6Class(
   classname = "LogTibble",
   private = list(
@@ -78,6 +79,9 @@ LogTibble <- R6::R6Class(
       self$addLog("ERROR", step, message, ...)
     },
 
+    #' print
+    #' @description
+    #' prints log.
     print = function(){
       print(private$log)
     }

@@ -19,9 +19,38 @@ helper_getNewCohortTableHandler <- function(){
 }
 
 
+helper_getConnectionToTestConfiguration <- function(){
+  testSelectedConfiguration  <- getOption("testSelectedConfiguration")
+  connectionDetailsSettings <- testSelectedConfiguration$connection$connectionDetailsSettings
 
-helper_getErrorFromR6 <- function() {
+  if(connectionDetailsSettings$dbms == "eunomia"){
+    connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+  }else{
+    connectionDetails <- rlang::exec(DatabaseConnector::createConnectionDetails, !!!connectionDetailsSettings)
+  }
 
+  connection <- DatabaseConnector::connect(connectionDetails)
+
+  return(connection)
+}
+
+
+helper_getParedSourcePersonAndPersonIds  <- function(
+    connection,
+    cohortDatabaseSchema,
+    numberPersons){
+
+  # Connect, collect tables
+  personTable <- dplyr::tbl(connection, tmp_inDatabaseSchema(cohortDatabaseSchema, "person"))
+
+  # get first n persons
+  pairedSourcePersonAndPersonIds  <- personTable  |>
+    dplyr::arrange(person_id) |>
+    dplyr::select(person_id, person_source_value) |>
+    dplyr::collect(n=numberPersons)
+
+
+  return(pairedSourcePersonAndPersonIds)
 }
 
 
@@ -32,19 +61,6 @@ helper_getErrorFromR6 <- function() {
 
 
 
-
-
-
-
-
-
-helper_getDatabaseSettings <- function(){
-  database_settings <- readDatabaseSettings(
-    path_databases_settings_yalm = testthat::test_path("config", "test_config.yml"),
-    database_name = getOption("test_database_settings_name", default = "dev_bigquery")
-  )
-  return(database_settings)
-}
 
 
 

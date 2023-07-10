@@ -14,16 +14,28 @@ URL: https://github.com/javier-gracia-tabuenca-tuni/HadesExtras
 BugReports: https://github.com/javier-gracia-tabuenca-tuni/HadesExtras/issues
 Imports: 
     checkmate,
+    CohortGenerator,
     DatabaseConnector,
+    DBI,
+    dbplyr,
     dplyr,
+    Eunomia,
     lubridate,
+    purrr,
+    R6,
     readr,
+    ResultModelManager,
+    rlang,
     ROhdsiWebApi,
     SqlRender,
     stringr,
     tibble,
+    tidyr,
+    validate,
     yaml
 Suggests: 
+    devtools,
+    ggplot2,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)
