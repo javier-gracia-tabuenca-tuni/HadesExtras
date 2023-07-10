@@ -46,10 +46,10 @@ config <- yaml::yaml.load(config_yaml)
 ```
 
 ```{r}
-# configurations <- yaml::read_yaml(testthat::test_path("config", "test_config.yml"))
-# configurationName <- "dev_eunomia"
-# #configurationName <- "dev_eunomia"
-# config <- configurations[[configurationName]]
+configurations <- yaml::read_yaml(testthat::test_path("config", "test_config.yml"))
+configurationName <- "dev_bigquery"
+#configurationName <- "dev_eunomia"
+config <- configurations[[configurationName]]
 ```
 
 # CDMHandled
@@ -60,7 +60,8 @@ It includes attributes and functions to retieve information from the database an
 ```{r}
 connectionHandler <- ResultModelManager_createConnectionHandler(
     connectionDetailsSettings = config$connection$connectionDetailsSettings,
-    tempEmulationSchema = config$connection$tempEmulationSchema
+    tempEmulationSchema = config$connection$tempEmulationSchema, 
+    useBigrqueryUpload = config$connection$useBigrqueryUpload
   )
 
   CDMdb <- CDMdbHandler$new(

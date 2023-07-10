@@ -164,7 +164,7 @@ cohortDataToCohortDefinitionSet <- function(
   # Connect to tables and copy cohortData to database
   personTable <- dplyr::tbl(connection, tmp_inDatabaseSchema(cdmDatabaseSchema, "person"))
   observationPeriodTable <- dplyr::tbl(connection, tmp_inDatabaseSchema(cdmDatabaseSchema, "observation_period"))
-  cohortDataTable <- dplyr::copy_to(connection, cohortData)
+  cohortDataTable <- tmp_dplyr_copy_to(connection, cohortData)
 
   # join to cohort_data_table cohort_names_table.cohort_name; person.person_id; observation_period period dates
   toAppend <- cohortDataTable |>

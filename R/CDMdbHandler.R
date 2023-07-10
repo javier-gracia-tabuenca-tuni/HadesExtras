@@ -92,7 +92,7 @@ CDMdbHandler <- R6::R6Class(
       tryCatch(
         {
           self$connectionHandler$getConnection() |>
-            dplyr::copy_to(cars, overwrite = TRUE)
+            tmp_dplyr_copy_to(cars, overwrite = TRUE)
           self$connectionHandler$getConnection() |>
             DatabaseConnector::dropEmulatedTempTables()
         },
