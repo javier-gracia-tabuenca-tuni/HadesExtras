@@ -8,7 +8,7 @@
 #' @importFrom tibble tibble add_row
 #' @importFrom dplyr add_row
 #'
-#' @export LogTibble
+#' @export
 #'
 LogTibble <- R6::R6Class(
   classname = "LogTibble",

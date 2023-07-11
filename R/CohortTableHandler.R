@@ -13,7 +13,7 @@
 #' @importFrom dplyr bind_rows filter left_join count collect nest_by mutate select
 #' @importFrom stringr str_remove_all
 #'
-#' @export ConnectionHandler
+#' @export
 #'
 CohortTableHandler <- R6::R6Class(
   classname = "CohortTableHandler",

@@ -18,7 +18,7 @@
 #' @importFrom DBI dbIsValid
 #' @importFrom DatabaseConnector connect disconnect getTableNames dropEmulatedTempTables
 #'
-#' @export CDMdbHandler
+#' @export
 CDMdbHandler <- R6::R6Class(
   classname = "CDMdbHandler",
   public = list(

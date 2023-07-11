@@ -7,6 +7,7 @@
 ResultModelManager_createConnectionHandler(
   connectionDetailsSettings,
   tempEmulationSchema = NULL,
+  useBigrqueryUpload = NULL,
   usePooledConnection = FALSE,
   ...
 )
