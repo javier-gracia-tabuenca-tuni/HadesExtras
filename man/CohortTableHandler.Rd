@@ -36,6 +36,7 @@ Inherits from CDMdbHandler.
 \if{html}{\out{<a id="method-CohortTableHandler-new"></a>}}
 \if{latex}{\out{\hypertarget{method-CohortTableHandler-new}{}}}
 \subsection{Method \code{new()}}{
+Initialize the CohortTableHandler object
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{CohortTableHandler$new(
   connectionHandler,

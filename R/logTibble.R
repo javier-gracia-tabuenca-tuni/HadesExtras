@@ -17,7 +17,7 @@ LogTibble <- R6::R6Class(
   ),
 
   public = list(
-    #' initialize
+    #'
     #' @description
     #' Initializes a new LogTibble object.
     initialize = function() {

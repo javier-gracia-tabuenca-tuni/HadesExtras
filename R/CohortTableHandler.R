@@ -26,7 +26,7 @@ CohortTableHandler <- R6::R6Class(
     # database parameters
     cohortDatabaseSchema = NULL,
     cohortTableNames = NULL,
-    #'
+    #' @description
     #' Initialize the CohortTableHandler object
     #'
     #' @param connectionHandler The connection handler object.
