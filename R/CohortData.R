@@ -59,7 +59,7 @@ assertCohortData  <- function(tibble) {
 #' @importFrom dplyr filter mutate if_else pull
 #' @importFrom purrr map
 #' @importFrom stringr str_replace_all
-#'
+#'/Users/javier/Library/Python/3.9/bin/radian
 .assertCollectionCohortData <- function(cohortData) {
 
   collection = checkmate::makeAssertCollection()

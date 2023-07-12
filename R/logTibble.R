@@ -38,7 +38,7 @@ LogTibble <- R6::R6Class(
     #' @param message  Log message content
     #' @param ...      Additional parameters for message formatting
     addLog = function(type, step, message, ...) {
-      private$log <- private$log %>%
+      private$log <- private$log  |>
         dplyr::add_row(
           type = factor(type, levels = c("INFO", "WARNING", "ERROR")),
           step = step,

@@ -206,14 +206,14 @@ CohortTableHandler <- R6::R6Class(
       # Function
       #
       histogramCohortStartYear <- cohortTable |>
-        dplyr::mutate( cohort_start_year = year(cohort_start_date) ) |>
-        dplyr::count(cohort_definition_id, cohort_start_year)  |>
+        dplyr::mutate( year = year(cohort_start_date) ) |>
+        dplyr::count(cohort_definition_id, year)  |>
         dplyr::collect() |>
         dplyr::nest_by(cohort_definition_id, .key = "histogram_cohort_start_year")
 
       histogramCohortEndYear <- cohortTable |>
-        dplyr::mutate( cohort_end_year = year(cohort_end_date) ) |>
-        dplyr::count(cohort_definition_id, cohort_end_year)  |>
+        dplyr::mutate( year = year(cohort_end_date) ) |>
+        dplyr::count(cohort_definition_id, year)  |>
         dplyr::collect() |>
         dplyr::nest_by(cohort_definition_id, .key = "histogram_cohort_end_year")
 
