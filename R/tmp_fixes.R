@@ -30,7 +30,6 @@ tmp_ConnectionHandler <- R6::R6Class(
 
 tmp_dplyr_copy_to <- function(dest, df, name = deparse(substitute(df)), overwrite = FALSE, ...) {
 
-
   if(!is.null(getOption("useBigrqueryUpload")) && getOption("useBigrqueryUpload")){
 
     # create empty table
@@ -39,7 +38,8 @@ tmp_dplyr_copy_to <- function(dest, df, name = deparse(substitute(df)), overwrit
 
     # get table name as created by SqlRender
     bq_table_name <- newTable |> dbplyr::remote_name() |>
-      stringr::str_replace("#", SqlRender::getTempTablePrefix())
+      stringr::str_replace("#", SqlRender::getTempTablePrefix()) |>
+      stringr::str_to_lower()
 
     # get project and dataset from sqlRenderTempEmulationSchema
     tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")

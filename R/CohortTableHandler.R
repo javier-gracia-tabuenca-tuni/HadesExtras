@@ -196,6 +196,8 @@ CohortTableHandler <- R6::R6Class(
     #' @description
     #' Retrieves the summary of cohorts including cohort start and end year histograms and sex counts.
     #'
+    # TODO: run sql only for the updated cohorts or keep an up to date cohortsSummary table
+    #       return empty tibble if no data
     getCohortsSummary  = function(){
       connection <- self$connectionHandler$getConnection()
       cohortTable <- dplyr::tbl(connection, tmp_inDatabaseSchema(self$cohortDatabaseSchema, self$cohortTableNames$cohortTable))
