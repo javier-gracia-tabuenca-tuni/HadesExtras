@@ -164,7 +164,7 @@ cohortDataToCohortDefinitionSet <- function(
   # Connect to tables and copy cohortData to database
   personTable <- dplyr::tbl(connection, tmp_inDatabaseSchema(cdmDatabaseSchema, "person"))
   observationPeriodTable <- dplyr::tbl(connection, tmp_inDatabaseSchema(cdmDatabaseSchema, "observation_period"))
-  cohortDataTable <- tmp_dplyr_copy_to(connection, cohortData)
+  cohortDataTable <- tmp_dplyr_copy_to(connection, cohortData, overwrite = TRUE)
 
   # join to cohort_data_table cohort_names_table.cohort_name; person.person_id; observation_period period dates
   toAppend <- cohortDataTable |>
@@ -190,8 +190,8 @@ cohortDataToCohortDefinitionSet <- function(
       n_source_person = dplyr::n_distinct(person_source_value),
       n_source_entries = dplyr::n(),
       n_missing_source_person = dplyr::n_distinct(person_source_value) - dplyr::n_distinct(person_id),
-      n_missing_cohort_start = sum(is.null(cohort_start_date), na.rm = TRUE),
-      n_missing_cohort_end = sum(is.null(cohort_end_date), na.rm = TRUE)
+      n_missing_cohort_start = sum(ifelse(is.null(cohort_start_date),1L,0L), na.rm = TRUE),
+      n_missing_cohort_end = sum(ifelse(is.null(cohort_end_date),1L,0L), na.rm = TRUE)
     ) |>
     dplyr::collect()
 

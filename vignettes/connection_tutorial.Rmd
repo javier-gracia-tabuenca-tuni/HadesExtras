@@ -47,8 +47,8 @@ config <- yaml::yaml.load(config_yaml)
 
 ```{r}
 configurations <- yaml::read_yaml(testthat::test_path("config", "test_config.yml"))
-configurationName <- "dev_bigquery"
-#configurationName <- "dev_eunomia"
+#configurationName <- "dev_bigquery"
+configurationName <- "dev_eunomia"
 config <- configurations[[configurationName]]
 ```
 
