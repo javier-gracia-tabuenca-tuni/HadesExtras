@@ -151,11 +151,7 @@ test_that("CohortTableHandler$cohortsSummary return a tibbe with data", {
 
   cohortsSummary <- cohortTableHandler$getCohortsSummary()
 
-  cohortsSummary |> names() |> checkmate::expect_set_equal(
-    c("cohortName", "cohortId", "sourceCohortId", "cohortDescription",
-      "cohortEntries", "cohortSubjects",
-      "histogram_cohort_start_year", "histogram_cohort_end_year","count_sex")
-  )
+  cohortsSummary |> checkCohortsSummary() |> expect_true()
 
 
 })

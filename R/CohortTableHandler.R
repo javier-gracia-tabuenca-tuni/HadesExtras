@@ -60,12 +60,11 @@ CohortTableHandler <- R6::R6Class(
         sourceCohortId = 0, cohortDescription = "",
         .rows = 0 )
 
-      private$cohortsSummary <- tibble::tibble(
-        cohortId=0, cohortEntries=0, cohortSubjects=0,
-        histogram_cohort_start_year = list(tibble::tibble(year=0, n=0, .rows = 0)),
-        histogram_cohort_end_year = list(tibble::tibble(year=0, n=0, .rows = 0)),
-        count_sex = list(tibble::tibble(sex="", n=0, .rows = 0)),
-        .rows = 0 )
+      private$cohortsSummary <- createEmptyCohortsSummary() |>
+        dplyr::select(
+          cohortId, cohortEntries, cohortSubjects,
+          histogram_cohort_start_year, histogram_cohort_end_year, count_sex
+        )
 
       private$incrementalFolder <- file.path(tempdir(),stringr::str_remove_all(Sys.time(),"-|:|\\.|\\s"))
 
@@ -206,7 +205,12 @@ CohortTableHandler <- R6::R6Class(
 
       # if no errors save to private$cohortDefinitionSet
       private$cohortDefinitionSet <- cohortDefinitionSet
-      private$cohortsSummary <- cohortsSummary
+      private$cohortsSummary <- cohortsSummary |>
+        dplyr::mutate(
+          cohortId = as.integer(cohortId),
+          cohortEntries = as.integer(cohortEntries),
+          cohortSubjects = as.integer(cohortSubjects)
+        )
 
     },
     #'
