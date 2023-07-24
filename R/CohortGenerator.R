@@ -37,7 +37,7 @@ CohortGenerator_deleteCohortFromCohortTable  <- function(
 
   checkmate::assertCharacter(cohortDatabaseSchema, len = 1)
   checkmate::assertList(cohortTableNames)
-  checkmate::assertNumber(cohortIds)
+  checkmate::assertNumeric(cohortIds)
 
   #browser()
   # Function

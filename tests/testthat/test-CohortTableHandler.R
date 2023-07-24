@@ -59,7 +59,7 @@ test_that("CohortTableHandler$addCohorts errors when cohort name exists", {
 
 })
 
-test_that("CohortTableHandler$addCohorts errors when ids name exists", {
+test_that("CohortTableHandler$addCohorts changes cohortId and keeps cohortId as sourceCohortId to avoid cohort overlap", {
 
   cohortTableHandler <- helper_getNewCohortTableHandler()
 
@@ -75,7 +75,12 @@ test_that("CohortTableHandler$addCohorts errors when ids name exists", {
   cohortTableHandler$addCohorts(cohortDefinitionSet)
 
   cohortDefinitionSet$cohortName <- "Cohort 20"
-  expect_error( cohortTableHandler$addCohorts(cohortDefinitionSet) )
+  cohortTableHandler$addCohorts(cohortDefinitionSet)
+
+  cohortsSummary <- cohortTableHandler$getCohortsSummary()
+
+  cohortsSummary$cohortId |>  expect_equal(c(10, 20))
+  cohortsSummary$sourceCohortId |>  expect_equal(c(10, 10))
 
 })
 
@@ -100,7 +105,7 @@ test_that("CohortTableHandler$addCohorts errors with wrong sql", {
 #
 # Delete cohorts
 #
-test_that("CohortTableHandler$addCohorts errors with wrong sql", {
+test_that("CohortTableHandler$deleteCohorts deletes a cohort and cohortsSummary", {
 
   cohortTableHandler <- helper_getNewCohortTableHandler()
 
@@ -130,7 +135,7 @@ test_that("CohortTableHandler$addCohorts errors with wrong sql", {
 #
 # cohort summary
 #
-test_that("CohortTableHandler$addCohorts errors with wrong sql", {
+test_that("CohortTableHandler$cohortsSummary return a tibbe with data", {
 
   cohortTableHandler <- helper_getNewCohortTableHandler()
 
@@ -147,7 +152,9 @@ test_that("CohortTableHandler$addCohorts errors with wrong sql", {
   cohortsSummary <- cohortTableHandler$getCohortsSummary()
 
   cohortsSummary |> names() |> checkmate::expect_set_equal(
-    c("cohortId","cohortName","histogram_cohort_start_year", "histogram_cohort_end_year","count_sex")
+    c("cohortName", "cohortId", "sourceCohortId", "cohortDescription",
+      "cohortEntries", "cohortSubjects",
+      "histogram_cohort_start_year", "histogram_cohort_end_year","count_sex")
   )
 
 

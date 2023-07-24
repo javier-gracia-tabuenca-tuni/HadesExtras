@@ -150,6 +150,9 @@ Retrieves the summary of cohorts including cohort start and end year histograms 
 \if{html}{\out{<div class="r">}}\preformatted{CohortTableHandler$getCohortsSummary()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+A tibble containing cohort summary.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-CohortTableHandler-clone"></a>}}

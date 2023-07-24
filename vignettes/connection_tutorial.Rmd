@@ -190,7 +190,9 @@ cohortTableHandler$getCohortCounts()
 ```
 
 
-
+```{r}
+cohortTableHandler$getCohortsSummary()
+```
 
 
 

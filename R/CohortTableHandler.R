@@ -20,6 +20,7 @@ CohortTableHandler <- R6::R6Class(
   inherit = CDMdbHandler,
   private = list(
     cohortDefinitionSet = NULL,
+    cohortsSummary = NULL,
     incrementalFolder = NULL
   ),
   public = list(
@@ -56,7 +57,16 @@ CohortTableHandler <- R6::R6Class(
 
       private$cohortDefinitionSet <- tibble::tibble(
         cohortId=0,   cohortName="", sql="",        json="",
+        sourceCohortId = 0, cohortDescription = "",
         .rows = 0 )
+
+      private$cohortsSummary <- tibble::tibble(
+        cohortId=0, cohortEntries=0, cohortSubjects=0,
+        histogram_cohort_start_year = list(tibble::tibble(year=0, n=0, .rows = 0)),
+        histogram_cohort_end_year = list(tibble::tibble(year=0, n=0, .rows = 0)),
+        count_sex = list(tibble::tibble(sex="", n=0, .rows = 0)),
+        .rows = 0 )
+
       private$incrementalFolder <- file.path(tempdir(),stringr::str_remove_all(Sys.time(),"-|:|\\.|\\s"))
 
       self$loadConnection()
@@ -110,14 +120,11 @@ CohortTableHandler <- R6::R6Class(
     #'
     #' @param cohortDefinitionSet The cohort definition set to add.
     addCohorts = function(cohortDefinitionSet) {
-      #check parameters
+      #
+      # Check parameters
+      #
       if(!CohortGenerator::isCohortDefinitionSet(cohortDefinitionSet)){
         stop("Provided table is not of cohortDefinitionSet format")
-      }
-
-      cohortIdsExists <- intersect( private$cohortDefinitionSet$cohortId, cohortDefinitionSet$cohortId)
-      if(length(cohortIdsExists)!=0){
-        stop("Following cohort ids already exists on the cohort table: ", paste(cohortIdsExists, collapse = ", "))
       }
 
       cohortNamesExists <- intersect( private$cohortDefinitionSet$cohortName,  cohortDefinitionSet$cohortName  )
@@ -125,7 +132,18 @@ CohortTableHandler <- R6::R6Class(
         stop("Following cohort names already exists on the cohort table: ", paste(cohortNamesExists, collapse = ", "))
       }
 
-      # function
+      #
+      # Function
+      #
+
+      # change cohortId to not overlap with existing cohorts
+      maxCohortId <- ifelse(nrow(private$cohortDefinitionSet)==0, 0, max(private$cohortDefinitionSet$cohortId))
+      cohortDefinitionSet <- cohortDefinitionSet |>
+        dplyr::mutate(
+          sourceCohortId = cohortId,
+          cohortId = cohortId + maxCohortId
+          )
+
       cohortDefinitionSet <- dplyr::bind_rows(
         private$cohortDefinitionSet,
         cohortDefinitionSet
@@ -141,8 +159,54 @@ CohortTableHandler <- R6::R6Class(
         incrementalFolder = private$incrementalFolder
       )
 
+      # Update cohortsSummary
+      # TODO: at the moment runs for all cohorts every time a cohort is add,
+      #       it has to change to generate only the added cohorts
+      cohortCounts <- CohortGenerator::getCohortCounts(
+        connection= self$connectionHandler$getConnection(),
+        cohortDatabaseSchema = self$cohortDatabaseSchema,
+        cohortTable = self$cohortTableNames$cohortTable
+      )
+
+      connection <- self$connectionHandler$getConnection()
+      cohortTable <- dplyr::tbl(connection, tmp_inDatabaseSchema(self$cohortDatabaseSchema, self$cohortTableNames$cohortTable))
+      personTable  <- dplyr::tbl(connection, tmp_inDatabaseSchema(self$cdmDatabaseSchema, "person"))
+      conceptTable  <- dplyr::tbl(connection, tmp_inDatabaseSchema(self$vocabularyDatabaseSchema, "concept"))
+
+      histogramCohortStartYear <- cohortTable |>
+        dplyr::mutate( year = year(cohort_start_date) ) |>
+        dplyr::count(cohort_definition_id, year)  |>
+        dplyr::collect() |>
+        dplyr::nest_by(cohort_definition_id, .key = "histogram_cohort_start_year")
+
+      histogramCohortEndYear <- cohortTable |>
+        dplyr::mutate( year = year(cohort_end_date) ) |>
+        dplyr::count(cohort_definition_id, year)  |>
+        dplyr::collect() |>
+        dplyr::nest_by(cohort_definition_id, .key = "histogram_cohort_end_year")
+
+      sexCounts <- cohortTable  |>
+        dplyr::left_join(
+          personTable  |> dplyr::select(person_id, gender_concept_id),
+          by = c("subject_id" = "person_id")
+        ) |>
+        dplyr::left_join(
+          conceptTable |> dplyr::select(concept_id, concept_name),
+          by = c("gender_concept_id" = "concept_id")
+        ) |>
+        dplyr::count(cohort_definition_id, sex=concept_name)|>
+        dplyr::collect() |>
+        dplyr::nest_by(cohort_definition_id, .key = "count_sex")
+
+      cohortsSummary <- cohortCounts |>
+        dplyr::left_join(histogramCohortStartYear, by = c("cohortId" = "cohort_definition_id")) |>
+        dplyr::left_join(histogramCohortEndYear, by = c("cohortId" = "cohort_definition_id")) |>
+        dplyr::left_join(sexCounts, by = c("cohortId" = "cohort_definition_id"))
+
+
       # if no errors save to private$cohortDefinitionSet
       private$cohortDefinitionSet <- cohortDefinitionSet
+      private$cohortsSummary <- cohortsSummary
 
     },
     #'
@@ -169,6 +233,9 @@ CohortTableHandler <- R6::R6Class(
       private$cohortDefinitionSet <- private$cohortDefinitionSet |>
         dplyr::filter(cohortId != cohortIds)
 
+      private$cohortsSummary <- private$cohortsSummary |>
+        dplyr::filter(cohortId != cohortIds)
+
     },
     #'
     #' getCohortCounts
@@ -177,15 +244,9 @@ CohortTableHandler <- R6::R6Class(
     #'
     #' @return A tibble containing the cohort counts with names.
     getCohortCounts = function() {
-      cohortCounts <- CohortGenerator::getCohortCounts(
-        connection= self$connectionHandler$getConnection(),
-        cohortDatabaseSchema = self$cohortDatabaseSchema,
-        cohortTable = self$cohortTableNames$cohortTable
-      )
-
       cohortCountsWithNames <- dplyr::left_join(
         private$cohortDefinitionSet |> dplyr::select(cohortName, cohortId),
-        cohortCounts,
+        private$cohortsSummary |> dplyr::select(cohortId, cohortEntries, cohortSubjects),
         by= "cohortId"
       )
 
@@ -196,50 +257,15 @@ CohortTableHandler <- R6::R6Class(
     #' @description
     #' Retrieves the summary of cohorts including cohort start and end year histograms and sex counts.
     #'
-    # TODO: run sql only for the updated cohorts or keep an up to date cohortsSummary table
-    #       return empty tibble if no data
+    #' @return A tibble containing cohort summary.
     getCohortsSummary  = function(){
-      connection <- self$connectionHandler$getConnection()
-      cohortTable <- dplyr::tbl(connection, tmp_inDatabaseSchema(self$cohortDatabaseSchema, self$cohortTableNames$cohortTable))
-      personTable  <- dplyr::tbl(connection, tmp_inDatabaseSchema(self$cdmDatabaseSchema, "person"))
-      conceptTable  <- dplyr::tbl(connection, tmp_inDatabaseSchema(self$vocabularyDatabaseSchema, "concept"))
+      cohortsSummaryWithNames <- dplyr::left_join(
+        private$cohortDefinitionSet |> dplyr::select(cohortName, cohortId, sourceCohortId, cohortDescription),
+        private$cohortsSummary,
+        by= "cohortId"
+      )
 
-      #
-      # Function
-      #
-      histogramCohortStartYear <- cohortTable |>
-        dplyr::mutate( year = year(cohort_start_date) ) |>
-        dplyr::count(cohort_definition_id, year)  |>
-        dplyr::collect() |>
-        dplyr::nest_by(cohort_definition_id, .key = "histogram_cohort_start_year")
-
-      histogramCohortEndYear <- cohortTable |>
-        dplyr::mutate( year = year(cohort_end_date) ) |>
-        dplyr::count(cohort_definition_id, year)  |>
-        dplyr::collect() |>
-        dplyr::nest_by(cohort_definition_id, .key = "histogram_cohort_end_year")
-
-      sexCounts <- cohortTable  |>
-        dplyr::left_join(
-          personTable  |> dplyr::select(person_id, gender_concept_id),
-          by = c("subject_id" = "person_id")
-        ) |>
-        dplyr::left_join(
-          conceptTable |> dplyr::select(concept_id, concept_name),
-          by = c("gender_concept_id" = "concept_id")
-        ) |>
-        dplyr::count(cohort_definition_id, sex=concept_name)|>
-        dplyr::collect() |>
-        dplyr::nest_by(cohort_definition_id, .key = "count_sex")
-
-      cohortsSummary <- private$cohortDefinitionSet |>
-        dplyr::select(cohortId, cohortName ) |>
-        dplyr::left_join(histogramCohortStartYear, by = c("cohortId" = "cohort_definition_id")) |>
-        dplyr::left_join(histogramCohortEndYear, by = c("cohortId" = "cohort_definition_id")) |>
-        dplyr::left_join(sexCounts, by = c("cohortId" = "cohort_definition_id"))
-
-
-      return(cohortsSummary)
+      return(cohortsSummaryWithNames)
     }
 
   )
