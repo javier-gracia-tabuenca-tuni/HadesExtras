@@ -9,29 +9,40 @@ createEmptyCohortData <- function() {
     cohort_name = as.character(NA),
     person_source_value = as.character(NA),
     cohort_start_date = as.Date(NA),
-    cohort_start_date = as.Date(NA),
+    cohort_end_date = as.Date(NA),
     .rows = 0
   )
   return(empty_cohortData)
 }
 
-#' getCohortDataReadrColTypes
+#' readCohortData
 #'
-#' Returns a readr column types object for the cohort data.
+#' Reads a cohort data file and returns a data frame.
 #'
-#' @return A readr column types object.
+#' @param pathCohortDataFile The path to the cohort data file.
+#' @param delim The delimiter used in the cohort data file.
 #'
-#' @importFrom readr cols col_date col_character
+#' @return A data frame containing the cohort data.
+#'
+#' @importFrom readr cols col_character col_date read_delim
+#' @importFrom checkmate assertFile
 #'
 #' @export
-getCohortDataReadrColTypes <- function(){
+
+readCohortData <- function(pathCohortDataFile, delim = "," ){
+
+  checkmate::assertFile(pathCohortDataFile)
+
   col_types <- readr::cols(
     cohort_name = readr::col_character(),
     person_source_value = readr::col_character(),
-    cohort_start_date = readr::col_date("yyyy-mm-dd"),
-    cohort_start_date = readr::col_date("yyyy-mm-dd")
+    cohort_start_date = readr::col_date(format = ""),
+    cohort_end_date = readr::col_date(format = "")
   )
-  return(col_types)
+
+  cohortData <- readr::read_delim(pathCohortDataFile, delim = delim)
+
+  return(cohortData)
 }
 
 #' Check if a tibble is of cohortData format.
