@@ -28,7 +28,6 @@ createEmptyCohortData <- function() {
 #' @importFrom checkmate assertFile
 #'
 #' @export
-
 readCohortData <- function(pathCohortDataFile, delim = "," ){
 
   checkmate::assertFile(pathCohortDataFile)
