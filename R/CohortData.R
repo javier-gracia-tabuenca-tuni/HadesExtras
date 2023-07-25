@@ -39,7 +39,10 @@ readCohortData <- function(pathCohortDataFile, delim = "," ){
     cohort_end_date = readr::col_date(format = "")
   )
 
-  cohortData <- readr::read_delim(pathCohortDataFile, delim = delim)
+  cohortData <- readr::read_delim(
+    pathCohortDataFile,
+    delim = delim,
+    col_types = col_types )
 
   return(cohortData)
 }
