@@ -15,6 +15,25 @@ createEmptyCohortData <- function() {
   return(empty_cohortData)
 }
 
+#' getCohortDataReadrColTypes
+#'
+#' Returns a readr column types object for the cohort data.
+#'
+#' @return A readr column types object.
+#'
+#' @importFrom readr cols col_date col_character
+#'
+#' @export
+getCohortDataReadrColTypes <- function(){
+  col_types <- readr::cols(
+    cohort_name = readr::col_character(),
+    person_source_value = readr::col_character(),
+    cohort_start_date = readr::col_date("yyyy-mm-dd"),
+    cohort_start_date = readr::col_date("yyyy-mm-dd")
+  )
+  return(col_types)
+}
+
 #' Check if a tibble is of cohortData format.
 #'
 #' This function performs various validations on the cohortData tibble to ensure its integrity and correctness. The validations include:
