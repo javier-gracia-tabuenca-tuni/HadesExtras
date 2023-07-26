@@ -61,8 +61,8 @@ correctEmptyCohortsInCohortsSummary <- function(cohortsSummary) {
       histogram_cohort_start_year = dplyr::if_else(is.na(cohortEntries), empty_histogram, histogram_cohort_start_year),
       histogram_cohort_end_year = dplyr::if_else(is.na(cohortEntries), empty_histogram, histogram_cohort_end_year),
       count_sex = dplyr::if_else(is.na(cohortEntries), empty_count_sex, count_sex),
-      cohortEntries = dplyr::if_else(is.na(cohortEntries), 0, cohortEntries),
-      cohortSubjects = dplyr::if_else(is.na(cohortSubjects), 0, cohortSubjects)
+      cohortEntries = dplyr::if_else(is.na(cohortEntries), 0L, cohortEntries),
+      cohortSubjects = dplyr::if_else(is.na(cohortSubjects), 0L, cohortSubjects)
     )
 
   return(cohortsSummary)

@@ -121,6 +121,8 @@ test_that("CohortTableHandler$insertOrUpdateCohorts can insert a cohort with no 
 
   cohortsSummary <- cohortTableHandler$getCohortsSummary()
 
+  cohortsSummary |> checkCohortsSummary() |> expect_true()
+
   cohortsSummary$cohortEntries |> expect_equal(0)
   cohortsSummary$cohortSubjects |> expect_equal(0)
   cohortsSummary$histogram_cohort_start_year |> nrow() |> expect_equal(0)
