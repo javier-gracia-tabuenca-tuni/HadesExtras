@@ -181,7 +181,7 @@ cohortDefinitionSet |> purrr::pluck(5,1)
 Copy `cohortDefinitionSet` to `cohort` table 
 
 ```{r}
-cohortTableHandler$addCohorts(cohortDefinitionSet)
+cohortTableHandler$insertOrUpdateCohorts(cohortDefinitionSet)
 ```
 
 Check it is correct

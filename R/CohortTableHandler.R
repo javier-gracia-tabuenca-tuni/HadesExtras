@@ -113,12 +113,13 @@ CohortTableHandler <- R6::R6Class(
       }
     },
     #'
-    #' addCohort
+    #' insertOrUpdateCohorts
     #' @description
-    #' Adds cohorts to the cohort table.
+    #' If there is no cohort with the same name it is added and generated with a new cohort_id, given cohort_id is saved as source_cohort_id,
+    #' If there is a cohort with the same name, the current cohort_id is kept and source_cohort_id is updated
     #'
     #' @param cohortDefinitionSet The cohort definition set to add.
-    addCohorts = function(cohortDefinitionSet) {
+    insertOrUpdateCohorts = function(cohortDefinitionSet) {
       #
       # Check parameters
       #
@@ -128,7 +129,7 @@ CohortTableHandler <- R6::R6Class(
 
       cohortNamesExists <- intersect( private$cohortDefinitionSet$cohortName,  cohortDefinitionSet$cohortName  )
       if(length(cohortNamesExists)!=0){
-        stop("Following cohort names already exists on the cohort table: ", paste(cohortNamesExists, collapse = ", "))
+        warning("Following cohort names already exists on the cohort table and will be updated: ", paste(cohortNamesExists, collapse = ", "))
       }
 
       #
@@ -138,13 +139,18 @@ CohortTableHandler <- R6::R6Class(
       # change cohortId to not overlap with existing cohorts
       maxCohortId <- ifelse(nrow(private$cohortDefinitionSet)==0, 0, max(private$cohortDefinitionSet$cohortId))
       cohortDefinitionSet <- cohortDefinitionSet |>
+        dplyr::rename(sourceCohortId = cohortId) |>
+        dplyr::left_join(
+          private$cohortDefinitionSet |> dplyr::select(cohortId, cohortName),
+          by = "cohortName"
+        ) |>
         dplyr::mutate(
-          sourceCohortId = cohortId,
-          cohortId = cohortId + maxCohortId
-          )
+          cohortId = dplyr::if_else(is.na(cohortId), sourceCohortId + maxCohortId, cohortId)
+        )
 
+      # update existing cohorts
       cohortDefinitionSet <- dplyr::bind_rows(
-        private$cohortDefinitionSet,
+        private$cohortDefinitionSet |> dplyr::filter(!(cohortName %in% cohortNamesExists)),
         cohortDefinitionSet
       )
 
@@ -270,6 +276,15 @@ CohortTableHandler <- R6::R6Class(
       )
 
       return(cohortsSummaryWithNames)
+    },
+    #'
+    #' getCohortNames
+    #' @description
+    #' Retrieves the cohort names.
+    #'
+    #' @return A vector with the name of the cohorts
+    getCohortNames  = function(){
+      return(private$cohortDefinitionSet |> dplyr::pull(cohortName))
     }
 
   )

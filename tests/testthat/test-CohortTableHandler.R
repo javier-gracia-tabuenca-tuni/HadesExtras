@@ -13,9 +13,9 @@ test_that("CohortTableHandler creates object with correct params", {
 
 
 #
-# addCohorts
+# insertOrUpdateCohorts
 #
-test_that("CohortTableHandler$addCohorts adds a cohort", {
+test_that("CohortTableHandler$insertOrUpdateCohorts adds a cohort", {
 
   cohortTableHandler <- helper_getNewCohortTableHandler()
 
@@ -28,7 +28,7 @@ test_that("CohortTableHandler$addCohorts adds a cohort", {
     json = ""
   )
 
-  cohortTableHandler$addCohorts(cohortDefinitionSet)
+  cohortTableHandler$insertOrUpdateCohorts(cohortDefinitionSet)
   cohortCounts <- cohortTableHandler$getCohortCounts()
 
   cohortCounts |> expect_equal(
@@ -39,7 +39,7 @@ test_that("CohortTableHandler$addCohorts adds a cohort", {
 
 })
 
-test_that("CohortTableHandler$addCohorts errors when cohort name exists", {
+test_that("CohortTableHandler$insertOrUpdateCohorts warns when cohort name exists and upadte it", {
 
   cohortTableHandler <- helper_getNewCohortTableHandler()
 
@@ -52,14 +52,18 @@ test_that("CohortTableHandler$addCohorts errors when cohort name exists", {
     json = ""
   )
 
-  cohortTableHandler$addCohorts(cohortDefinitionSet)
+  cohortTableHandler$insertOrUpdateCohorts(cohortDefinitionSet)
 
   cohortDefinitionSet$cohortId <- 20
-  expect_error( cohortTableHandler$addCohorts(cohortDefinitionSet) )
+  expect_warning( cohortTableHandler$insertOrUpdateCohorts(cohortDefinitionSet) )
+
+  cohortsSummary <- cohortTableHandler$getCohortsSummary()
+  cohortsSummary |> nrow() |> expect_equal(1)
+  cohortsSummary |> dplyr::pull(sourceCohortId) |> expect_equal(20)
 
 })
 
-test_that("CohortTableHandler$addCohorts changes cohortId and keeps cohortId as sourceCohortId to avoid cohort overlap", {
+test_that("CohortTableHandler$insertOrUpdateCohorts changes cohortId and keeps cohortId as sourceCohortId to avoid cohort overlap", {
 
   cohortTableHandler <- helper_getNewCohortTableHandler()
 
@@ -72,10 +76,10 @@ test_that("CohortTableHandler$addCohorts changes cohortId and keeps cohortId as 
     json = ""
   )
 
-  cohortTableHandler$addCohorts(cohortDefinitionSet)
+  cohortTableHandler$insertOrUpdateCohorts(cohortDefinitionSet)
 
   cohortDefinitionSet$cohortName <- "Cohort 20"
-  cohortTableHandler$addCohorts(cohortDefinitionSet)
+  cohortTableHandler$insertOrUpdateCohorts(cohortDefinitionSet)
 
   cohortsSummary <- cohortTableHandler$getCohortsSummary()
 
@@ -85,7 +89,7 @@ test_that("CohortTableHandler$addCohorts changes cohortId and keeps cohortId as 
 })
 
 
-test_that("CohortTableHandler$addCohorts errors with wrong sql", {
+test_that("CohortTableHandler$insertOrUpdateCohorts errors with wrong sql", {
 
   cohortTableHandler <- helper_getNewCohortTableHandler()
 
@@ -98,7 +102,7 @@ test_that("CohortTableHandler$addCohorts errors with wrong sql", {
     json = ""
   )
 
-  expect_error(cohortTableHandler$addCohorts(cohortDefinitionSet))
+  expect_error(cohortTableHandler$insertOrUpdateCohorts(cohortDefinitionSet))
 
 })
 
@@ -117,7 +121,7 @@ test_that("CohortTableHandler$deleteCohorts deletes a cohort and cohortsSummary"
     VALUES (@target_cohort_id, 1, CAST('20000101' AS DATE), CAST('20220101' AS DATE)  );",
     json = ""
   )
-  cohortTableHandler$addCohorts(cohortDefinitionSet)
+  cohortTableHandler$insertOrUpdateCohorts(cohortDefinitionSet)
 
   cohortTableHandler$deleteCohorts(10L)
 
@@ -147,7 +151,7 @@ test_that("CohortTableHandler$cohortsSummary return a tibbe with data", {
     VALUES (@target_cohort_id, 1, CAST('20000101' AS DATE), CAST('20220101' AS DATE)  );",
     json = ""
   )
-  cohortTableHandler$addCohorts(cohortDefinitionSet)
+  cohortTableHandler$insertOrUpdateCohorts(cohortDefinitionSet)
 
   cohortsSummary <- cohortTableHandler$getCohortsSummary()
 
