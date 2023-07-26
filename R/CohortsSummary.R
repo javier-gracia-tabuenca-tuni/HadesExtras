@@ -35,6 +35,40 @@ createEmptyCohortsSummary <- function() {
   return(emptyCohortsSummary)
 }
 
+#' Set NA to 0 in a cohortsSummary, and tibles to be empty
+#'
+#' @return A tibble with cohort summary structure
+#' @importFrom tibble tibble
+#' @importFrom dplyr mutate if_else
+#' @export
+#'
+correctEmptyCohortsInCohortsSummary <- function(cohortsSummary) {
+
+  empty_histogram = list(
+    tibble::tibble(
+      year = as.integer(NA),
+      n = as.integer(NA),
+      .rows = 0)
+  )
+  empty_count_sex = list(
+    tibble::tibble(
+      sex = as.character(NA),
+      n = as.integer(NA),
+      .rows = 0))
+
+  cohortsSummary <- cohortsSummary |>
+    dplyr::mutate(
+      histogram_cohort_start_year = dplyr::if_else(is.na(cohortEntries), empty_histogram, histogram_cohort_start_year),
+      histogram_cohort_end_year = dplyr::if_else(is.na(cohortEntries), empty_histogram, histogram_cohort_end_year),
+      count_sex = dplyr::if_else(is.na(cohortEntries), empty_count_sex, count_sex),
+      cohortEntries = dplyr::if_else(is.na(cohortEntries), 0, cohortEntries),
+      cohortSubjects = dplyr::if_else(is.na(cohortSubjects), 0, cohortSubjects)
+    )
+
+  return(cohortsSummary)
+}
+
+
 #' Check if a tibble is of CohortsSummary format.
 #'
 #' This function performs various validations on the CohortsSummary tibble to ensure its integrity and correctness. The validations include:

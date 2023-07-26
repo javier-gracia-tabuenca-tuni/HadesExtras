@@ -203,11 +203,16 @@ CohortTableHandler <- R6::R6Class(
         dplyr::collect() |>
         dplyr::nest_by(cohort_definition_id, .key = "count_sex")
 
-      cohortsSummary <- cohortCounts |>
+      cohortsSummary <- cohortDefinitionSet |>
+        dplyr::select(cohortId) |>
+        dplyr::left_join(cohortCounts, by = c("cohortId" = "cohortId") )|>
         dplyr::left_join(histogramCohortStartYear, by = c("cohortId" = "cohort_definition_id")) |>
         dplyr::left_join(histogramCohortEndYear, by = c("cohortId" = "cohort_definition_id")) |>
         dplyr::left_join(sexCounts, by = c("cohortId" = "cohort_definition_id"))
 
+
+      # correct if n patients in cohort is 0
+      cohortsSummary <- correctEmptyCohortsInCohortsSummary(cohortsSummary)
 
       # if no errors save to private$cohortDefinitionSet
       private$cohortDefinitionSet <- cohortDefinitionSet

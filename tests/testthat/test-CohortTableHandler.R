@@ -106,6 +106,29 @@ test_that("CohortTableHandler$insertOrUpdateCohorts errors with wrong sql", {
 
 })
 
+test_that("CohortTableHandler$insertOrUpdateCohorts can insert a cohort with no subjects", {
+
+  cohortTableHandler <- helper_getNewCohortTableHandler()
+
+  cohortDefinitionSet <- tibble::tibble(
+    cohortId = 10,
+    cohortName = "cohort1",
+    sql = "DELETE FROM @target_database_schema.@target_cohort_table where cohort_definition_id = @target_cohort_id;",
+    json = ""
+  )
+
+  cohortTableHandler$insertOrUpdateCohorts(cohortDefinitionSet)
+
+  cohortsSummary <- cohortTableHandler$getCohortsSummary()
+
+  cohortsSummary$cohortEntries |> expect_equal(0)
+  cohortsSummary$cohortSubjects |> expect_equal(0)
+  cohortsSummary$histogram_cohort_start_year |> nrow() |> expect_equal(0)
+  cohortsSummary$histogram_cohort_end_year |> nrow() |> expect_equal(0)
+  cohortsSummary$count_sex |> nrow() |> expect_equal(0)
+
+})
+
 #
 # Delete cohorts
 #
