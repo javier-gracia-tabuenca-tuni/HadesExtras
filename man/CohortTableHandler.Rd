@@ -25,10 +25,11 @@ Inherits from CDMdbHandler.
 \item \href{#method-CohortTableHandler-new}{\code{CohortTableHandler$new()}}
 \item \href{#method-CohortTableHandler-finalize}{\code{CohortTableHandler$finalize()}}
 \item \href{#method-CohortTableHandler-loadConnection}{\code{CohortTableHandler$loadConnection()}}
-\item \href{#method-CohortTableHandler-addCohorts}{\code{CohortTableHandler$addCohorts()}}
+\item \href{#method-CohortTableHandler-insertOrUpdateCohorts}{\code{CohortTableHandler$insertOrUpdateCohorts()}}
 \item \href{#method-CohortTableHandler-deleteCohorts}{\code{CohortTableHandler$deleteCohorts()}}
 \item \href{#method-CohortTableHandler-getCohortCounts}{\code{CohortTableHandler$getCohortCounts()}}
 \item \href{#method-CohortTableHandler-getCohortsSummary}{\code{CohortTableHandler$getCohortsSummary()}}
+\item \href{#method-CohortTableHandler-getCohortNames}{\code{CohortTableHandler$getCohortNames()}}
 \item \href{#method-CohortTableHandler-clone}{\code{CohortTableHandler$clone()}}
 }
 }
@@ -82,19 +83,20 @@ loadConnection
 \subsection{Method \code{loadConnection()}}{
 Reloads the connection with the initial setting and updates connection status
 
-addCohort
+insertOrUpdateCohorts
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{CohortTableHandler$loadConnection()}\if{html}{\out{</div>}}
 }
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CohortTableHandler-addCohorts"></a>}}
-\if{latex}{\out{\hypertarget{method-CohortTableHandler-addCohorts}{}}}
-\subsection{Method \code{addCohorts()}}{
-Adds cohorts to the cohort table.
+\if{html}{\out{<a id="method-CohortTableHandler-insertOrUpdateCohorts"></a>}}
+\if{latex}{\out{\hypertarget{method-CohortTableHandler-insertOrUpdateCohorts}{}}}
+\subsection{Method \code{insertOrUpdateCohorts()}}{
+If there is no cohort with the same name it is added and generated with a new cohort_id, given cohort_id is saved as source_cohort_id,
+If there is a cohort with the same name, the current cohort_id is kept and source_cohort_id is updated
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{CohortTableHandler$addCohorts(cohortDefinitionSet)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{CohortTableHandler$insertOrUpdateCohorts(cohortDefinitionSet)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -152,6 +154,21 @@ Retrieves the summary of cohorts including cohort start and end year histograms 
 
 \subsection{Returns}{
 A tibble containing cohort summary.
+
+getCohortNames
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CohortTableHandler-getCohortNames"></a>}}
+\if{latex}{\out{\hypertarget{method-CohortTableHandler-getCohortNames}{}}}
+\subsection{Method \code{getCohortNames()}}{
+Retrieves the cohort names.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{CohortTableHandler$getCohortNames()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+A vector with the name of the cohorts
 }
 }
 \if{html}{\out{<hr>}}
