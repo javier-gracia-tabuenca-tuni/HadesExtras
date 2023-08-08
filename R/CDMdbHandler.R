@@ -22,6 +22,7 @@
 CDMdbHandler <- R6::R6Class(
   classname = "CDMdbHandler",
   public = list(
+    databaseName = NULL,
     # database parameters
     connectionHandler = NULL,
     vocabularyDatabaseSchema = NULL,
@@ -38,19 +39,23 @@ CDMdbHandler <- R6::R6Class(
     #' @param cdmDatabaseSchema             Name of the CDM database schema
     #' @param vocabularyDatabaseSchema      (Optional) Name of the vocabulary database schema (default is cdmDatabaseSchema)
     initialize = function(
+    databaseName,
     connectionHandler,
     cdmDatabaseSchema,
     vocabularyDatabaseSchema = cdmDatabaseSchema) {
+      checkmate::assertString(databaseName)
       checkmate::assertClass(connectionHandler, "ConnectionHandler")
       checkmate::assertString(cdmDatabaseSchema)
       checkmate::assertString(vocabularyDatabaseSchema)
 
+      self$databaseName <- databaseName
       self$connectionHandler <- connectionHandler
       self$vocabularyDatabaseSchema <- vocabularyDatabaseSchema
       self$cdmDatabaseSchema <- cdmDatabaseSchema
 
       self$loadConnection()
 
+      lockBinding("databaseName", self)
       lockBinding("connectionHandler", self)
       lockBinding("vocabularyDatabaseSchema", self)
       lockBinding("cdmDatabaseSchema", self)
@@ -220,6 +225,7 @@ CDMdbHandler <- R6::R6Class(
         )
       }
 
+
       # update status
       unlockBinding("vocabularyInfo", self)
       unlockBinding("CDMInfo", self)
@@ -236,6 +242,88 @@ CDMdbHandler <- R6::R6Class(
       lockBinding("connectionStatusLog", self)
       lockBinding("getTblVocabularySchema", self)
       lockBinding("getTblCDMSchema", self)
+    },
+
+    #' Get connection status
+    #' @description
+    #' gets tibble with database name and connection status.
+    getConnectionStatus = function() {
+      self$connectionStatusLog$logTibble |>
+        dplyr::mutate(databaseName = self$databaseName) |>
+        dplyr::relocate(databaseName, .before = 1)
+
     }
   )
 )
+
+
+#' createCDMdbHandlerFromList
+#'
+#' A function to create a CDMdbHandler object from a list of configuration settings.
+#'
+#' @param config A list containing configuration settings for the CDMdbHandler.
+#'   - databaseName: The name of the database.
+#'   - connection: A list of connection details settings.
+#'   - cdm: A list of CDM database schema settings.
+#'   - cohortTable: The name of the cohort table.
+#'
+#' @return A CDMdbHandler object.
+#'
+#' @importFrom checkmate assertList assertSubset
+#'
+#' @export
+createCDMdbHandlerFromList <- function(
+    config
+  ) {
+
+  config |> checkmate::assertList()
+  config |> names() |> checkmate::assertSubset(c("databaseName", "connection", "cdm" ))
+
+  connectionHandler <- ResultModelManager_createConnectionHandler(
+    connectionDetailsSettings = config$connection$connectionDetailsSettings,
+    tempEmulationSchema = config$connection$tempEmulationSchema,
+    useBigrqueryUpload = config$connection$useBigrqueryUpload
+  )
+
+  CDMdb <- CDMdbHandler$new(
+    databaseName = config$databaseName,
+    connectionHandler = connectionHandler,
+    cdmDatabaseSchema = config$cdm$cdmDatabaseSchema,
+    vocabularyDatabaseSchema = config$cdm$vocabularyDatabaseSchema
+  )
+
+  return(CDMdb)
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

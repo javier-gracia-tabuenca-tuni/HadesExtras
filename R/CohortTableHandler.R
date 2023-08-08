@@ -36,6 +36,7 @@ CohortTableHandler <- R6::R6Class(
     #' @param cohortDatabaseSchema Name of the cohort database schema.
     #' @param cohortTableName Name of the cohort table.
     initialize = function(connectionHandler,
+                          databaseName,
                           cdmDatabaseSchema,
                           vocabularyDatabaseSchema = cdmDatabaseSchema,
                           cohortDatabaseSchema,
@@ -47,6 +48,7 @@ CohortTableHandler <- R6::R6Class(
       checkmate::assertString(cohortTableName)
 
       super$initialize(
+        databaseName = databaseName,
         connectionHandler = connectionHandler,
         cdmDatabaseSchema = cdmDatabaseSchema,
         vocabularyDatabaseSchema = vocabularyDatabaseSchema
@@ -137,22 +139,25 @@ CohortTableHandler <- R6::R6Class(
       #
 
       # change cohortId to not overlap with existing cohorts
-      maxCohortId <- ifelse(nrow(private$cohortDefinitionSet)==0, 0, max(private$cohortDefinitionSet$cohortId))
-      cohortDefinitionSet <- cohortDefinitionSet |>
-        dplyr::rename(sourceCohortId = cohortId) |>
-        dplyr::left_join(
-          private$cohortDefinitionSet |> dplyr::select(cohortId, cohortName),
-          by = "cohortName"
-        ) |>
-        dplyr::mutate(
-          cohortId = dplyr::if_else(is.na(cohortId), sourceCohortId + maxCohortId, cohortId)
-        )
+      # maxCohortId <- ifelse(nrow(private$cohortDefinitionSet)==0, 0, max(private$cohortDefinitionSet$cohortId))
+      # cohortDefinitionSet <- cohortDefinitionSet |>
+      #   dplyr::rename(sourceCohortId = cohortId) |>
+      #   dplyr::left_join(
+      #     private$cohortDefinitionSet |> dplyr::select(cohortId, cohortName),
+      #     by = "cohortName"
+      #   ) |>
+      #   dplyr::mutate(
+      #     cohortId = dplyr::if_else(is.na(cohortId), sourceCohortId + maxCohortId, cohortId)
+      #   )
 
       # update existing cohorts
+      hasSubSets <- isTRUE(attr(private$cohortDefinitionSet, "hasSubsetDefinitions")) | isTRUE(attr(cohortDefinitionSet, "hasSubsetDefinitions"))
       cohortDefinitionSet <- dplyr::bind_rows(
         private$cohortDefinitionSet |> dplyr::filter(!(cohortName %in% cohortNamesExists)),
         cohortDefinitionSet
       )
+      attr(cohortDefinitionSet, "hasSubsetDefinitions") <- hasSubSets
+
 
       CohortGenerator::generateCohortSet(
         connection= self$connectionHandler$getConnection(),
@@ -167,49 +172,13 @@ CohortTableHandler <- R6::R6Class(
       # Update cohortsSummary
       # TODO: at the moment runs for all cohorts every time a cohort is add,
       #       it has to change to generate only the added cohorts
-      cohortCounts <- CohortGenerator::getCohortCounts(
+      cohortDemograpics <- CohortGenerator_getCohortDemograpics(
         connection= self$connectionHandler$getConnection(),
+        cdmDatabaseSchema = self$cdmDatabaseSchema,
+        vocabularyDatabaseSchema = self$vocabularyDatabaseSchema,
         cohortDatabaseSchema = self$cohortDatabaseSchema,
         cohortTable = self$cohortTableNames$cohortTable
       )
-
-      connection <- self$connectionHandler$getConnection()
-      cohortTable <- dplyr::tbl(connection, tmp_inDatabaseSchema(self$cohortDatabaseSchema, self$cohortTableNames$cohortTable))
-      personTable  <- dplyr::tbl(connection, tmp_inDatabaseSchema(self$cdmDatabaseSchema, "person"))
-      conceptTable  <- dplyr::tbl(connection, tmp_inDatabaseSchema(self$vocabularyDatabaseSchema, "concept"))
-
-      histogramCohortStartYear <- cohortTable |>
-        dplyr::mutate( year = year(cohort_start_date) ) |>
-        dplyr::count(cohort_definition_id, year)  |>
-        dplyr::collect() |>
-        dplyr::nest_by(cohort_definition_id, .key = "histogram_cohort_start_year")
-
-      histogramCohortEndYear <- cohortTable |>
-        dplyr::mutate( year = year(cohort_end_date) ) |>
-        dplyr::count(cohort_definition_id, year)  |>
-        dplyr::collect() |>
-        dplyr::nest_by(cohort_definition_id, .key = "histogram_cohort_end_year")
-
-      sexCounts <- cohortTable  |>
-        dplyr::left_join(
-          personTable  |> dplyr::select(person_id, gender_concept_id),
-          by = c("subject_id" = "person_id")
-        ) |>
-        dplyr::left_join(
-          conceptTable |> dplyr::select(concept_id, concept_name),
-          by = c("gender_concept_id" = "concept_id")
-        ) |>
-        dplyr::count(cohort_definition_id, sex=concept_name)|>
-        dplyr::collect() |>
-        dplyr::nest_by(cohort_definition_id, .key = "count_sex")
-
-      cohortsSummary <- cohortDefinitionSet |>
-        dplyr::select(cohortId) |>
-        dplyr::left_join(cohortCounts, by = c("cohortId" = "cohortId") )|>
-        dplyr::left_join(histogramCohortStartYear, by = c("cohortId" = "cohort_definition_id")) |>
-        dplyr::left_join(histogramCohortEndYear, by = c("cohortId" = "cohort_definition_id")) |>
-        dplyr::left_join(sexCounts, by = c("cohortId" = "cohort_definition_id"))
-
 
       # correct if n patients in cohort is 0
       cohortsSummary <- correctEmptyCohortsInCohortsSummary(cohortsSummary)
@@ -294,6 +263,60 @@ CohortTableHandler <- R6::R6Class(
 
   )
 )
+
+
+#' createCohortTableHandlerFromList
+#'
+#' A function to create a CohortTableHandler object from a list of configuration settings.
+#'
+#' @param config A list containing configuration settings for the CohortTableHandler.
+#'   - databaseName: The name of the database.
+#'   - connection: A list of connection details settings.
+#'   - cdm: A list of CDM database schema settings.
+#'   - cohortTable: A list of cohort table settings.
+#'
+#' @return A CohortTableHandler object.
+#'
+#' @importFrom checkmate assertList assertSubset
+#'
+#' @export
+createCohortTableHandlerFromList <- function(
+    config
+) {
+
+  config |> checkmate::assertList()
+  config |> names() |> checkmate::assertSubset(c("databaseName", "connection", "cdm", "cohortTable" ))
+
+  connectionHandler <- ResultModelManager_createConnectionHandler(
+    connectionDetailsSettings = config$connection$connectionDetailsSettings,
+    tempEmulationSchema = config$connection$tempEmulationSchema,
+    useBigrqueryUpload = config$connection$useBigrqueryUpload
+  )
+  cohortTableHandler <- CohortTableHandler$new(
+    connectionHandler = connectionHandler,
+    databaseName = config$databaseName,
+    cdmDatabaseSchema = config$cdm$cdmDatabaseSchema,
+    vocabularyDatabaseSchema = config$cdm$vocabularyDatabaseSchema,
+    cohortDatabaseSchema = config$cohortTable$cohortDatabaseSchema,
+    cohortTableName = config$cohortTable$cohortTableName
+  )
+
+  return(cohortTableHandler)
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

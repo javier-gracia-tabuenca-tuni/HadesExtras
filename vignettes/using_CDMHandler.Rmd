@@ -1,0 +1,122 @@
+---
+title: "Using CDMHandler"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{connection_tutorial}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+#library(HadesExtras)
+devtools::load_all(".")
+#options("DEBUG_DATABASECONNECTOR_DBPLYR" = FALSE)
+```
+
+# Configuration 
+
+We need the following configuration. We write this in yaml format for clarity. 
+
+```{r}
+config_yaml <- "
+  connection:
+    connectionDetailsSettings:
+        dbms: eunomia
+  cdm:
+      cdmDatabaseSchema: main
+      vocabularyDatabaseSchema: main
+"
+
+cat(config_yaml)
+```
+
+```{r}
+config <- yaml::yaml.load(config_yaml)
+```
+
+```{r}
+configurations <- yaml::read_yaml(testthat::test_path("config", "test_config.yml"))
+configurationName <- "dev_bigquery"
+configurationName <- "dev_eunomia"
+config <- configurations[[configurationName]]
+```
+
+# CDMHandled
+
+CDMHandled is a R6 object connected to a OMOP-CDM. 
+It includes attributes and functions to retrieve information from the database and work with the tables.
+
+```{r, eval=FALSE}
+connectionHandler <- ResultModelManager_createConnectionHandler(
+    connectionDetailsSettings = config$connection$connectionDetailsSettings,
+    tempEmulationSchema = config$connection$tempEmulationSchema, 
+    useBigrqueryUpload = config$connection$useBigrqueryUpload
+  )
+
+  CDMdb <- CDMdbHandler$new(
+    databaseName = config$databaseName,
+    connectionHandler = connectionHandler,
+    cdmDatabaseSchema = config$cdm$cdmDatabaseSchema,
+    vocabularyDatabaseSchema = config$cdm$vocabularyDatabaseSchema
+  )
+```
+
+Or for convenience `createCDMdbHandlerFromList` can be used. 
+```{r}
+CDMdb <- createCDMdbHandlerFromList(config)
+```
+
+
+First thing to do is to check the status of the connection. 
+`CDMdb$connectionStatusLog` not only shows if the connection is correct, but also if the `tempEmulationSchema` works, and all the CDM and Vocabulary tables are available in the database.  
+```{r}
+CDMdb$getConnectionStatus()
+```
+
+Function `reactable_connectionStatus` creates an interactive table with this information.
+```{r}
+CDMdb$getConnectionStatus() |> 
+  reactable_connectionStatus()
+```
+
+We can get information on the CDM and Vocabulary version: 
+```{r}
+CDMdb$CDMInfo
+```
+
+```{r}
+CDMdb$vocabularyInfo
+```
+
+Tables in the database can be used as if they were tibbles thanks to  [dbplyr](https://dbplyr.tidyverse.org/). 
+```{r}
+CDMdb$getTblCDMSchema$person() |> 
+  dplyr::count(year_of_birth) 
+```
+
+```{r}
+CDMdb$getTblCDMSchema$person() |>
+  dplyr::left_join(
+    CDMdb$getTblVocabularySchema$concept() |> dplyr::select(concept_id, concept_name),
+    by = c("gender_concept_id" = "concept_id")
+  ) |> 
+  ggplot2::ggplot(ggplot2::aes(x=year_of_birth, fill=factor(concept_name))) + 
+    ggplot2::geom_bar()
+```
+
+
+
+
+
+
+
+

@@ -72,8 +72,8 @@ ResultModelManager_createConnectionHandler  <- function(
       connectionDetails$connectionString
     }
 
-    OAuthType=0
-
+  }else{
+    options(useBigrqueryUpload = NULL)
   }
 
 

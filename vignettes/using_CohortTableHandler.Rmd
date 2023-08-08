@@ -1,5 +1,5 @@
 ---
-title: "connection_tutorial"
+title: "Using CohortTableHandler"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{connection_tutorial}
@@ -28,6 +28,7 @@ We need the following configuration. We write this in yaml format for clarity.
 
 ```{r}
 config_yaml <- "
+  databaseName: Eunomia1
   connection:
     connectionDetailsSettings:
         dbms: eunomia
@@ -47,85 +48,29 @@ config <- yaml::yaml.load(config_yaml)
 
 ```{r}
 configurations <- yaml::read_yaml(testthat::test_path("config", "test_config.yml"))
-#configurationName <- "dev_bigquery"
+configurationName <- "dev_bigquery"
 configurationName <- "dev_eunomia"
 config <- configurations[[configurationName]]
 ```
 
-# CDMHandled
+# Create CohortTableHandler
 
-CDMHandled is a R6 object connected to a OMOP-CDM. 
-It includes attributes and functions to retieve information from the database and wotk with the tables.
+The CohortTableHandler is an extension of CDMHandled (see vignette) to include the a `cohort` table and the functions to work with this table. 
 
+As in `CDMHandled`, to create a `CohortTableHandles`, for convenience `createCohortTableHandlerFromList` can be used. 
 ```{r}
-connectionHandler <- ResultModelManager_createConnectionHandler(
-    connectionDetailsSettings = config$connection$connectionDetailsSettings,
-    tempEmulationSchema = config$connection$tempEmulationSchema, 
-    useBigrqueryUpload = config$connection$useBigrqueryUpload
-  )
-
-  CDMdb <- CDMdbHandler$new(
-    connectionHandler = connectionHandler,
-    cdmDatabaseSchema = config$cdm$cdmDatabaseSchema,
-    vocabularyDatabaseSchema = config$cdm$vocabularyDatabaseSchema
-  )
+cohortTableHandler <- createCohortTableHandlerFromList(config)
 ```
 
-First thing to do is to check the status of the connection. 
-`CDMdb$connectionStatusLog` not only shows if the connection is correct, but also if the `tempEmulationSchema` works, and all the CDM and Vocabulary tables are available in the database.  
-```{r}
-CDMdb$connectionStatusLog
-```
-
-We can get information on the CDM and Vocbulary version: 
-```{r}
-CDMdb$CDMInfo
-```
+In addition to the checks performed by `CDMHandled`, `cohortTableHandler` includes a check on the creation of the `cohort` table. 
 
 ```{r}
-CDMdb$vocabularyInfo
-```
-
-Tables in the database can be used as if they were tibbles thanks to  [dbplyr](https://dbplyr.tidyverse.org/). 
-```{r}
-CDMdb$getTblCDMSchema$person() |> 
-  dplyr::count(year_of_birth) 
-```
-
-```{r}
-CDMdb$getTblCDMSchema$person() |>
-  ggplot2::ggplot(ggplot2::aes(x=year_of_birth, fill=factor(gender_concept_id))) + 
-    ggplot2::geom_bar()
+cohortTableHandler$getConnectionStatus() |> 
+  reactable_connectionStatus()
 ```
 
 
-# CohortTableHandler
-
-The CohortTableHandler is an extension of CDMHandled to include the a `cohort` table and the functions to work with this table. 
-
-```{r}
-connectionHandler <- ResultModelManager_createConnectionHandler(
-  connectionDetailsSettings = config$connection$connectionDetailsSettings,
-  tempEmulationSchema = config$connection$tempEmulationSchema, 
-    useBigrqueryUpload = config$connection$useBigrqueryUpload
-)
-cohortTableHandler <- CohortTableHandler$new(
-  connectionHandler = connectionHandler,
-  cdmDatabaseSchema = config$cdm$cdmDatabaseSchema,
-  vocabularyDatabaseSchema = config$cdm$vocabularyDatabaseSchema,
-  cohortDatabaseSchema = config$cohortTable$cohortDatabaseSchema,
-  cohortTableName = config$cohortTable$cohortTableName
-)
-```
-
-`cohortTableHandler$connectionStatusLog` includes a check on the creation of the `cohort` table. 
-
-```{r}
-cohortTableHandler$connectionStatusLog
-```
-
-
-## Add cohors to `cohort` table 
+# Add cohors to `cohort` table 
 
 Create tibble of `cohortData` format. See the documentation for the correct format. 
 

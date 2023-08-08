@@ -1,0 +1,204 @@
+---
+title: "test_subsetdefinitions"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{test_subsetdefinitions}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+#library(HadesExtras)
+devtools::load_all(".")
+#options("DEBUG_DATABASECONNECTOR_DBPLYR" = FALSE)
+```
+
+# Configuration 
+
+We need the following configuration. We write this in yaml format for clarity. 
+
+```{r}
+config_yaml <- "
+  connection:
+    connectionDetailsSettings:
+        dbms: eunomia
+  cdm:
+      cdmDatabaseSchema: main
+      vocabularyDatabaseSchema: main
+  cohortTable:
+      cohortDatabaseSchema: main
+      cohortTableName: test_cohort_table"
+
+cat(config_yaml)
+```
+
+```{r}
+config <- yaml::yaml.load(config_yaml)
+```
+
+```{r}
+configurations <- yaml::read_yaml(testthat::test_path("config", "test_config.yml"))
+#configurationName <- "dev_bigquery"
+configurationName <- "dev_eunomia"
+config <- configurations[[configurationName]]
+```
+
+
+
+```{r}
+connectionHandler <- ResultModelManager_createConnectionHandler(
+  connectionDetailsSettings = config$connection$connectionDetailsSettings,
+  tempEmulationSchema = config$connection$tempEmulationSchema, 
+    useBigrqueryUpload = config$connection$useBigrqueryUpload
+)
+cohortTableHandler <- CohortTableHandler$new(
+  connectionHandler = connectionHandler,
+  cdmDatabaseSchema = config$cdm$cdmDatabaseSchema,
+  vocabularyDatabaseSchema = config$cdm$vocabularyDatabaseSchema,
+  cohortDatabaseSchema = config$cohortTable$cohortDatabaseSchema,
+  cohortTableName = config$cohortTable$cohortTableName
+)
+```
+
+
+
+```{r}
+baseUrl <- "https://api.ohdsi.org/WebAPI"
+# A list of cohort IDs for use in this vignette
+cohortIds <- c(1778211, 1778212, 1778213)
+# Get the SQL/JSON for the cohorts
+cohortDefinitionSet <- ROhdsiWebApi::exportCohortDefinitionSet(
+  baseUrl = baseUrl,
+  cohortIds = cohortIds
+)
+```
+
+
+```{r}
+cohortTableHandler$insertOrUpdateCohorts(cohortDefinitionSet)
+```
+
+```{r}
+cohortTableHandler$getCohortsSummary() |> 
+  dplyr::mutate(database_name = "eunomia") |> 
+  table_cohortsWorkbench_reactable()
+```
+
+
+```{r}
+# Example, we want to have a HTN cohort that starts any time prior to the index start
+# and the HTN cohort ends any time after the index start
+subsetDef <- CohortGenerator::createCohortSubsetDefinition(
+  name = "Patients in cohort cohort 1778213 with 365 days prior observation",
+  definitionId = 10,
+  subsetOperators = list(
+    # here we are saying 'first subset to only those patients in cohort 1778213'
+    CohortGenerator::createCohortSubset(
+      name = "Subset to patients in cohort 1778213",
+      # Note that this can be set to any id - if the
+      # cohort is empty or doesn't exist this will not error
+      cohortIds = 1778213,
+      cohortCombinationOperator = "any",
+      negate = FALSE,
+      startWindow = CohortGenerator::createSubsetCohortWindow(
+        startDay = -9999,
+        endDay = 0,
+        targetAnchor = "cohortStart"
+      ),
+      endWindow = CohortGenerator::createSubsetCohortWindow(
+        startDay = 0,
+        endDay = 9999,
+        targetAnchor = "cohortStart"
+      )
+    ),
+
+    # Next, subset to only those with 365 days of prior observation
+    CohortGenerator::createLimitSubset(
+      name = "Observation of at least 365 days prior",
+      priorTime = 365,
+      followUpTime = 0,
+      limitTo = "firstEver"
+    )
+  )
+)
+```
+
+
+
+```{r}
+cohortDefinitionSetAddedsubsetDef <- cohortDefinitionSet |>
+  CohortGenerator::addCohortSubsetDefinition(subsetDef)
+```
+
+```{r}
+cohortTableHandler$insertOrUpdateCohorts(cohortDefinitionSetAddedsubsetDef)
+```
+
+```{r}
+cohortTableHandler$getCohortsSummary() |> 
+  dplyr::mutate(database_name = "eunomia") |> 
+  table_cohortsWorkbench_reactable()
+```
+
+
+
+
+
+
+
+
+```{r}
+connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+CohortGenerator::createCohortTables(
+  connectionDetails = connectionDetails,
+  cohortDatabaseSchema = "main",
+  cohortTableNames = CohortGenerator::getCohortTableNames("my_cohort")
+)
+# ### As subsets are a big side effect we need to be clear what was generated and have good naming conventions
+generatedCohorts <- CohortGenerator::generateCohortSet(
+  connectionDetails = connectionDetails,
+  cdmDatabaseSchema = "main",
+  cohortDatabaseSchema = "main",
+  cohortTableNames = CohortGenerator::getCohortTableNames("my_cohort"),
+  cohortDefinitionSet = cohortDefinitionSetAddedsubsetDef,
+  incremental = TRUE,
+  incrementalFolder = file.path(tempdir(), "RecordKeeping")
+)
+
+CohortGenerator::getCohortCounts(
+  connectionDetails = connectionDetails, 
+  cohortDatabaseSchema = "main",
+  cohortTable = "my_cohort"
+  )
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

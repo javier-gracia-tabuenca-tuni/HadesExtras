@@ -264,3 +264,59 @@ cohortDataToCohortDefinitionSet <- function(
 }
 
 
+
+
+.cohortDataToSQLcomment <- function(cohortData, sql){
+
+  cohortDataSqlComment <- paste0(
+    "-- START COHORTDATA\n",
+    "--", cohortData |>  RJSONIO::toJSON() |> stringr::str_replace_all("\\n", "\n--" ),
+    "\n-- END COHORTDATA\n"
+    )
+
+  sql <- paste0(cohortDataSqlComment, sql)
+
+  return(sql)
+
+}
+
+
+.cohortDataFromSQLcomment <- function(sqlWithCohortData){
+
+  cohortData <-  sqlWithCohortData |>
+    stringr::str_extract("(?<=-- START COHORTDATA)(.|\\n)*(?=\\n-- END COHORTDATA)") |>
+  stringr::str_remove_all("\\n--") |>
+    RJSONIO::fromJSON() |>
+    tibble::as_tibble() |>
+    dplyr::mutate(
+      cohort_start_date = as.Date(cohort_start_date),
+      cohort_end_date = as.Date(cohort_end_date)
+    )
+
+  sql <- sqlWithCohortData |>
+    stringr::str_remove("(-- START COHORTDATA)(.|\\n)*(-- END COHORTDATA)")
+
+  return(list(
+    cohortData = cohortData,
+    sql = sql
+    ))
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
