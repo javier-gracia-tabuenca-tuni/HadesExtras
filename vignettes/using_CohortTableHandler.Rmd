@@ -112,8 +112,6 @@ To copy the `cohortData` into the `cohort`it has to be converted to a `cohortDef
 
 ```{r}
 cohortDefinitionSet <- cohortDataToCohortDefinitionSet(
-    connection = cohortTableHandler$connectionHandler$getConnection(),
-    cdmDatabaseSchema = cohortTableHandler$cdmDatabaseSchema,
     cohortData = cohortData
   )
 ```

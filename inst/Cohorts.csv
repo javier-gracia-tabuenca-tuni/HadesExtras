@@ -1,4 +1,0 @@
-cohort_id,cohort_name,subset_parent,is_subset,subset_definition_id
-10,cases,10,FALSE,NA
-20,controls,20,FALSE,NA
-20300,controls -  Match to cohort 10 by birth year with ratio 1:20,20,TRUE,300

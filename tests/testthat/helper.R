@@ -19,8 +19,7 @@ helper_getNewCohortTableHandler <- function(){
 }
 
 
-helper_getConnectionToTestConfiguration <- function(){
-  testSelectedConfiguration  <- getOption("testSelectedConfiguration")
+helper_getConnection <- function(){
   connectionDetailsSettings <- testSelectedConfiguration$connection$connectionDetailsSettings
 
   if(connectionDetailsSettings$dbms == "eunomia"){

@@ -73,180 +73,48 @@ test_that("checkCohortData fails with cohort_start_date > cohort_end_date", {
 })
 
 
+
 #
 # cohortDataToCohortDefinitionSet
 #
-test_that("cohortDataToCohortDefinitionSet works", {
-  # get test settings
-  connection <- helper_getConnectionToTestConfiguration()
-  on.exit({DatabaseConnector::dropEmulatedTempTables(connection); DatabaseConnector::disconnect(connection)})
-  testSelectedConfiguration  <- getOption("testSelectedConfiguration")
-  cohortDatabaseSchema <- testSelectedConfiguration$cdm$cdmDatabaseSchema
 
-  # test params
-  sourcePersonToPersonId <- helper_getParedSourcePersonAndPersonIds(
-    connection = connection,
-    cohortDatabaseSchema = cohortDatabaseSchema,
-    numberPersons = 2*5
-  )
+test_that(" cohortDataToCohortDefinitionSet works", {
 
-  cohort_data <- tibble::tibble(
+  cohortData <- tibble::tibble(
     cohort_name = rep(c("Cohort A", "Cohort B"), 5),
-    person_source_value = sourcePersonToPersonId$person_source_value,
+    person_source_value = letters[1:10],
     cohort_start_date = rep(as.Date(c("2020-01-01", "2020-01-01")), 5),
     cohort_end_date = rep(as.Date(c("2020-01-03", "2020-01-04")), 5)
   )
 
+  cohortDefinitionSet <- cohortDataToCohortDefinitionSet(cohortData)
 
-  # function
-  cohortDefinitionSet <- cohortDataToCohortDefinitionSet(
-    connection = connection,
-    cdmDatabaseSchema = cohortDatabaseSchema,
-    cohortData = cohort_data
-  )
-
-  # expectations
-  cohortDefinitionSet |> CohortGenerator::isCohortDefinitionSet() |> expect_true()
-
-  cohortDefinitionSet |> tidyr::unnest(extra_info) |>
-    dplyr::select(n_source_person, n_source_entries, n_missing_source_person, n_missing_cohort_start, n_missing_cohort_end) |>
-    expect_equal(tibble::tibble(
-      n_source_person = c(5, 5),
-      n_source_entries = c(5, 5),
-      n_missing_source_person = c(0, 0),
-      n_missing_cohort_start = c(0, 0),
-      n_missing_cohort_end = c(0, 0)
-    ))
+  cohortDefinitionSet |> checkmate::expect_tibble()
+  cohortDefinitionSet |> names() |> checkmate::expect_subset(c("cohortId", "cohortName", "json", "sql" ))
+  cohortDefinitionSet |> pull(json) |> stringr::str_detect('cohortType\": \"FromCohortData\"') |> all() |> expect_true()
+  (cohortDefinitionSet |> pull(sql) |> unique() |> length() == cohortDefinitionSet |> nrow()) |> expect_true()
 
 })
 
-test_that("cohortDataToCohortDefinitionSet reports missing source person id", {
-  # get test settings
-  connection <- helper_getConnectionToTestConfiguration()
-  on.exit({DatabaseConnector::dropEmulatedTempTables(connection); DatabaseConnector::disconnect(connection)})
-  testSelectedConfiguration  <- getOption("testSelectedConfiguration")
-  cohortDatabaseSchema <- testSelectedConfiguration$cdm$cdmDatabaseSchema
 
-  # test params
-  sourcePersonToPersonId <- helper_getParedSourcePersonAndPersonIds(
-    connection = connection,
-    cohortDatabaseSchema = cohortDatabaseSchema,
-    numberPersons = 2*5
-  )
 
-  cohort_data <- tibble::tibble(
-    cohort_name = rep(c("Cohort A", "Cohort B"), 5),
-    person_source_value = c(sourcePersonToPersonId$person_source_value[1:5], letters[1:5]),
-    cohort_start_date = rep(as.Date(c("2020-01-01", "2020-01-01")), 5),
-    cohort_end_date = rep(as.Date(c("2020-01-03", "2020-01-04")), 5)
-  )
 
-  # function
-  cohortDefinitionSet <- cohortDataToCohortDefinitionSet(
-    connection = connection,
-    cdmDatabaseSchema = cohortDatabaseSchema,
-    cohortData = cohort_data
-  )
 
-  # expectations
-  cohortDefinitionSet |> CohortGenerator::isCohortDefinitionSet() |> expect_true()
 
-  cohortDefinitionSet |> tidyr::unnest(extra_info) |>
-    dplyr::select(n_source_person, n_source_entries, n_missing_source_person, n_missing_cohort_start, n_missing_cohort_end) |>
-    expect_equal(tibble::tibble(
-      n_source_person = c(5, 5),
-      n_source_entries = c(5, 5),
-      n_missing_source_person = c(2, 3),
-      n_missing_cohort_start = c(0, 0),
-      n_missing_cohort_end = c(0, 0)
-    ))
 
-})
 
-test_that("cohortDataToCohortDefinitionSet reports missing cohort_start_date", {
-  # get test settings
-  connection <- helper_getConnectionToTestConfiguration()
-  on.exit({DatabaseConnector::dropEmulatedTempTables(connection); DatabaseConnector::disconnect(connection)})
-  testSelectedConfiguration  <- getOption("testSelectedConfiguration")
-  cohortDatabaseSchema <- testSelectedConfiguration$cdm$cdmDatabaseSchema
 
-  # test params
-  sourcePersonToPersonId <- helper_getParedSourcePersonAndPersonIds(
-    connection = connection,
-    cohortDatabaseSchema = cohortDatabaseSchema,
-    numberPersons = 2*5
-  )
 
-  cohort_data <- tibble::tibble(
-    cohort_name = rep(c("Cohort A", "Cohort B"), 5),
-    person_source_value = sourcePersonToPersonId$person_source_value,
-    cohort_start_date = rep(as.Date(c("2020-01-01", NA)), 5),
-    cohort_end_date = rep(as.Date(c("2020-01-03", "2020-01-04")), 5)
-  )
 
-  # function
-  cohortDefinitionSet <- cohortDataToCohortDefinitionSet(
-    connection = connection,
-    cdmDatabaseSchema = cohortDatabaseSchema,
-    cohortData = cohort_data
-  )
 
-  # expectations
-  cohortDefinitionSet |> CohortGenerator::isCohortDefinitionSet() |> expect_true()
 
-  cohortDefinitionSet |> tidyr::unnest(extra_info) |>
-    dplyr::select(n_source_person, n_source_entries, n_missing_source_person, n_missing_cohort_start, n_missing_cohort_end) |>
-    expect_equal(tibble::tibble(
-      n_source_person = c(5, 5),
-      n_source_entries = c(5, 5),
-      n_missing_source_person = c(0, 0),
-      n_missing_cohort_start = c(0, 5),
-      n_missing_cohort_end = c(0, 0)
-    ))
 
-})
 
-test_that("cohortDataToCohortDefinitionSet reports missing cohort_end_date", {
-  # get test settings
-  connection <- helper_getConnectionToTestConfiguration()
-  on.exit({DatabaseConnector::dropEmulatedTempTables(connection); DatabaseConnector::disconnect(connection)})
-  testSelectedConfiguration  <- getOption("testSelectedConfiguration")
-  cohortDatabaseSchema <- testSelectedConfiguration$cdm$cdmDatabaseSchema
 
-  # test params
-  sourcePersonToPersonId <- helper_getParedSourcePersonAndPersonIds(
-    connection = connection,
-    cohortDatabaseSchema = cohortDatabaseSchema,
-    numberPersons = 2*5
-  )
 
-  cohort_data <- tibble::tibble(
-    cohort_name = rep(c("Cohort A", "Cohort B"), 5),
-    person_source_value = sourcePersonToPersonId$person_source_value,
-    cohort_start_date = rep(as.Date(c("2020-01-01", "2020-01-04")), 5),
-    cohort_end_date = rep(as.Date(c(NA, "2020-01-04")), 5)
-  )
 
-  # function
-  cohortDefinitionSet <- cohortDataToCohortDefinitionSet(
-    connection = connection,
-    cdmDatabaseSchema = cohortDatabaseSchema,
-    cohortData = cohort_data
-  )
 
-  # expectations
-  cohortDefinitionSet |> CohortGenerator::isCohortDefinitionSet() |> expect_true()
 
-  cohortDefinitionSet |> tidyr::unnest(extra_info) |>
-    dplyr::select(n_source_person, n_source_entries, n_missing_source_person, n_missing_cohort_start, n_missing_cohort_end) |>
-    expect_equal(tibble::tibble(
-      n_source_person = c(5, 5),
-      n_source_entries = c(5, 5),
-      n_missing_source_person = c(0, 0),
-      n_missing_cohort_start = c(0, 0),
-      n_missing_cohort_end = c(5, 0)
-    ))
 
-})
 
 
