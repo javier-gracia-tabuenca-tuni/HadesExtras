@@ -2,8 +2,6 @@
 
 test_that("createConnectionHandler works", {
 
-  testSelectedConfiguration  <- testSelectedConfiguration
-
   connectionHandler <- ResultModelManager_createConnectionHandler(
     connectionDetailsSettings = testSelectedConfiguration$connection$connectionDetailsSettings,
     tempEmulationSchema = testSelectedConfiguration$connection$tempEmulationSchema
@@ -15,6 +13,8 @@ test_that("createConnectionHandler works", {
     cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
     vocabularyDatabaseSchema = testSelectedConfiguration$cdm$vocabularyDatabaseSchema
   )
+
+  on.exit({CDMdb$finalize()})
 
   CDMdb |> checkmate::expect_class("CDMdbHandler")
   CDMdb$databaseName |> checkmate::assertString()

@@ -54,21 +54,7 @@ CohortGenerator_generateCohortSet <- function(
 
   if(nrow(cohortDefinitionSetCohortDataType)!=0){
     # separate sql from cohortData
-    cohortData <- cohortDefinitionSetCohortDataType |>
-      dplyr::mutate(
-        data = purrr::map(.x=json, .f = ~{
-          l <- RJSONIO::fromJSON(.x, nullValue = as.character(NA), simplify = TRUE)
-          l$cohortData |>
-            tibble::as_tibble() |>
-            dplyr::mutate(
-              cohort_start_date = as.Date(cohort_start_date),
-              cohort_end_date = as.Date(cohort_end_date)
-            )
-        })
-      ) |>
-      dplyr::select(cohortId, data) |>
-      tidyr::unnest(data) |>
-      dplyr::rename(cohort_definition_id = cohortId)
+    cohortData <- .jsonToCohortData(cohortDefinitionSet)
 
     # Connect to tables and copy cohortData to database
     personTable <- dplyr::tbl(connection, tmp_inDatabaseSchema(cdmDatabaseSchema, "person"))
@@ -116,32 +102,11 @@ CohortGenerator_generateCohortSet <- function(
       #dplyr::compute()
     # instead of compute, we create a temporal table, so the same stays the same in the sql, this is necesary for incremental mode
     # overwrite not working
-
-    browser()
-    DatabaseConnector::dbRemoveTable(connection, "temp_tbl")
-    toAppend <- dplyr::copy_to(connection, toAppend, "temp_tbl", temporary = TRUE, overwrite = TRUE)
-
-
-    sqlToRender <- SqlRender::readSql(system.file("sql/sql_server/ImportCohortTable.sql", package = "HadesExtras", mustWork = TRUE))
-    tableNameToRender <- dbplyr::remote_name(toAppend)
-
-
-    cohortDefinitionSetCohortDataType <- cohortDefinitionSetCohortDataType |>
-      dplyr::mutate(
-        sql = purrr::map2_chr(
-          .x = cohortId,
-          .y = sql,
-          .f=~{paste(.y, "\n",
-                     SqlRender::render(
-                       sql = sqlToRender,
-                       source_cohort_table = tableNameToRender,
-                       source_cohort_id = .x,
-                       is_temp_table = TRUE
-                     ))}
-        ),
-        json = json
-      )
-
+    cohortDataImportTmpTableName <- getOption("cohortDataImportTmpTableName", "tmp_cohortdata")
+    if(DatabaseConnector::dbExistsTable(connection, cohortDataImportTmpTableName)){
+      DatabaseConnector::dbRemoveTable(connection, cohortDataImportTmpTableName)
+    }
+    toAppend <- dplyr::copy_to(connection, toAppend, cohortDataImportTmpTableName, temporary = TRUE, overwrite = TRUE)
 
     # replace recalculated cohortDefinitionSets
     cohortDefinitionSet <- dplyr::bind_rows(
@@ -165,13 +130,23 @@ CohortGenerator_generateCohortSet <- function(
     incrementalFolder = incrementalFolder
   )
 
+  cohortGeneratorResults <- results |>
+    dplyr::select(-cohortName) |>
+    dplyr::mutate(
+      buildInfo = map(.x = cohortId, .f = ~{LogTibble$new()})
+    )
   #
   # start function after generateCohortSet
   #
   if(nrow(cohortDefinitionSetCohortDataType)!=0){
-    results <- results |>
-      dplyr::left_join(checkOnCohortData, by = c("cohortId" = "cohort_definition_id")) |>
-      tidyr::nest(.key = "extraInfo", .by = c("cohortName", "cohortId", "generationStatus", "startTime", "endTime"))
+    cohortGeneratorResults2 <- cohortGeneratorResults |>
+      dplyr::left_join(
+        checkOnCohortData |> tidyr::nest(.key = "cohortDataInfo", .by = "cohort_definition_id"),
+        by = c("cohortId" = "cohort_definition_id")
+        ) |>
+      dplyr::mutate(
+        buildInfo = purrr::map2(.x = buildInfo, .y = cohortDataInfo, .f = .cohortDataInfoToBuildInfo)
+      )
 
     DatabaseConnector::dropEmulatedTempTables(connection)
   }
@@ -180,10 +155,35 @@ CohortGenerator_generateCohortSet <- function(
   # end function after generateCohortSet
   #
 
-  return(results)
+  return(cohortGeneratorResults |> tibble::as_tibble())
 }
 
 
+.cohortDataInfoToBuildInfo <- function(buildInfo, cohortDataInfo) {
+
+  buildInfo |>  checkmate::assertR6(classes = "LogTibble")
+  cohortDataInfo |> checkmate::assertTibble(nrows = 1)
+  cohortDataInfo |> names() |> checkmate::assertNames(must.include = c("n_source_person", "n_source_entries", "n_missing_source_person", "n_missing_cohort_start",  "n_missing_cohort_end" ))
+
+
+  if(cohortDataInfo$n_missing_source_person == 0 ){
+    buildInfo$SUCCESS("", "All person_source_values were found")
+  }
+  if(cohortDataInfo$n_missing_source_person == cohortDataInfo$n_source_person ){
+    buildInfo$ERROR("", "All person_source_values were found")
+  }
+  if(cohortDataInfo$n_missing_source_person != 0 & cohortDataInfo$n_missing_source_person != cohortDataInfo$n_source_person ){
+    buildInfo$WARNING("", cohortDataInfo$n_missing_source_person, "person_source_values were not found")
+  }
+
+  if(cohortDataInfo$n_missing_cohort_start != 0 ){
+    buildInfo$WARNING("", cohortDataInfo$n_missing_cohort_start, "cohort_start_dates were missing and set to the first observation date")
+  }
+  if(cohortDataInfo$n_missing_cohort_end != 0 ){
+    buildInfo$WARNING("", cohortDataInfo$n_missing_cohort_end, "cohort_end_dates were missing and set to the first observation date")
+  }
+
+}
 
 
 

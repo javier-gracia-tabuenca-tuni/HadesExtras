@@ -4,31 +4,51 @@
 #
 test_that("CohortGenerator_deleteCohortFromCohortTable deletes a cohort", {
 
-  connectionDetails <- Eunomia::getEunomiaConnectionDetails()
-  cdmDatabaseSchema <- "main"
-  cohortDatabaseSchema <- "main"
-  cohortTable <- "cohort"
-  Eunomia::createCohorts(
-    connectionDetails = connectionDetails,
-    cdmDatabaseSchema = cdmDatabaseSchema,
-    cohortDatabaseSchema = cohortDatabaseSchema,
-    cohortTable = cohortTable
+  connection <- helper_getConnection()
+
+  CohortGenerator::createCohortTables(
+    connection = connection,
+    cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema,
+    cohortTableNames = getCohortTableNames(testSelectedConfiguration$cohortTable$cohortTableName),
   )
 
-  CohortGenerator_deleteCohortFromCohortTable(
-    connectionDetails = connectionDetails,
-    cohortDatabaseSchema = cohortDatabaseSchema,
-    cohortTableNames = CohortGenerator::getCohortTableNames(cohortTable),
-    cohortIds = c(1L,2L)
+  cohortDefinitionSet <- CohortGenerator::getCohortDefinitionSet(
+    settingsFileName = here::here("inst/testdata/matching/Cohorts.csv"),
+    jsonFolder = here::here("inst/testdata/matching/cohorts"),
+    sqlFolder = here::here("inst/testdata/matching/sql/sql_server"),
+    cohortFileNameFormat = "%s",
+    cohortFileNameValue = c("cohortName"),
+    #packageName = "HadesExtras",
+    verbose = FALSE
   )
+
+  generatedCohorts <- CohortGenerator::generateCohortSet(
+    connection = connection,
+    cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
+    cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema,
+    cohortTableNames = getCohortTableNames(testSelectedConfiguration$cohortTable$cohortTableName),
+    cohortDefinitionSet = cohortDefinitionSet,
+    incremental = FALSE
+  )
+
+  generatedCohorts$cohortId |>  expect_equal(c(10,20))
+
+  resultDelete <- CohortGenerator_deleteCohortFromCohortTable(
+    connection = connection,
+    cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema,
+    cohortTableNames = getCohortTableNames(testSelectedConfiguration$cohortTable$cohortTableName),
+    cohortIds = c(10L)
+  )
+
+  resultDelete |> expect_true()
 
   codeCounts <- CohortGenerator::getCohortCounts(
-    connectionDetails = connectionDetails,
-    cohortDatabaseSchema = cohortDatabaseSchema,
-    cohortTable = cohortTable
+    connection = connection,
+    cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema,
+    cohortTable = testSelectedConfiguration$cohortTable$cohortTableName
   )
 
-  codeCounts$cohortId |> expect_equal(c(3L,4L))
+  codeCounts$cohortId |> expect_equal(20)
 })
 
 
@@ -63,26 +83,22 @@ test_that("cohortDataToCohortDefinitionSet works", {
   )
 
   # function
-  generateCohortSetResults <- CohortGenerator_generateCohortSet(
+  cohortGeneratorResults <- CohortGenerator_generateCohortSet(
     connection = connection,
     cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
-    cohortDefinitionSet = cohortDefinitionSet
+    cohortDefinitionSet = cohortDefinitionSet,
+    incremental = FALSE
   )
 
 
   # expectations
-  generateCohortSetResults |> checkmate::expect_tibble()
-  generateCohortSetResults |> names() |> checkmate::expect_subset(c("cohortName","cohortId","generationStatus", "startTime","endTime","extraInfo"))
+  cohortGeneratorResults |> checkmate::expect_tibble()
+  cohortGeneratorResults |> names() |> checkmate::expect_names(must.include = c("cohortId","generationStatus", "startTime","endTime","buildInfo"))
 
-  generateCohortSetResults |> tidyr::unnest(extraInfo) |>
-    dplyr::select(n_source_person, n_source_entries, n_missing_source_person, n_missing_cohort_start, n_missing_cohort_end) |>
-    expect_equal(tibble::tibble(
-      n_source_person = c(5, 5),
-      n_source_entries = c(5, 5),
-      n_missing_source_person = c(0, 0),
-      n_missing_cohort_start = c(0, 0),
-      n_missing_cohort_end = c(0, 0)
-    ))
+  cohortGeneratorResults$generationStatus |> expect_equal(c("COMPLETE", "COMPLETE"))
+
+  cohortGeneratorResults$buildInfo[[1]]$logTibble$message |> expect_equal("All person_source_values were found")
+  cohortGeneratorResults$buildInfo[[2]]$logTibble$message |> expect_equal("All person_source_values were found")
 
 })
 
@@ -114,22 +130,22 @@ test_that("cohortDataToCohortDefinitionSet reports missing source person id", {
   )
 
   # function
-  generateCohortSetResults <- CohortGenerator_generateCohortSet(
+  cohortGeneratorResults <- CohortGenerator_generateCohortSet(
     connection = connection,
     cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
-    cohortDefinitionSet = cohortDefinitionSet
+    cohortDefinitionSet = cohortDefinitionSet,
+    incremental = FALSE
   )
 
+
   # expectations
-  generateCohortSetResults |> tidyr::unnest(extraInfo) |>
-    dplyr::select(n_source_person, n_source_entries, n_missing_source_person, n_missing_cohort_start, n_missing_cohort_end) |>
-    expect_equal(tibble::tibble(
-      n_source_person = c(5, 5),
-      n_source_entries = c(5, 5),
-      n_missing_source_person = c(2, 3),
-      n_missing_cohort_start = c(0, 0),
-      n_missing_cohort_end = c(0, 0)
-    ))
+  cohortGeneratorResults |> checkmate::expect_tibble()
+  cohortGeneratorResults |> names() |> checkmate::expect_names(must.include = c("cohortId","generationStatus", "startTime","endTime","buildInfo"))
+
+  cohortGeneratorResults$generationStatus |> expect_equal(c("COMPLETE", "COMPLETE"))
+
+  cohortGeneratorResults$buildInfo[[1]]$logTibble$message |> expect_equal("2 person_source_values were not found")
+  cohortGeneratorResults$buildInfo[[2]]$logTibble$message |> expect_equal("3 person_source_values were not found")
 
 })
 
@@ -161,22 +177,23 @@ test_that("cohortDataToCohortDefinitionSet reports missing cohort_start_date", {
   )
 
   # function
-  generateCohortSetResults <- CohortGenerator_generateCohortSet(
+  cohortGeneratorResults <- CohortGenerator_generateCohortSet(
     connection = connection,
     cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
-    cohortDefinitionSet = cohortDefinitionSet
+    cohortDefinitionSet = cohortDefinitionSet,
+    incremental = FALSE
   )
 
+
   # expectations
-  generateCohortSetResults |> tidyr::unnest(extraInfo) |>
-    dplyr::select(n_source_person, n_source_entries, n_missing_source_person, n_missing_cohort_start, n_missing_cohort_end) |>
-    expect_equal(tibble::tibble(
-      n_source_person = c(5, 5),
-      n_source_entries = c(5, 5),
-      n_missing_source_person = c(0, 0),
-      n_missing_cohort_start = c(0, 5),
-      n_missing_cohort_end = c(0, 0)
-    ))
+  cohortGeneratorResults |> checkmate::expect_tibble()
+  cohortGeneratorResults |> names() |> checkmate::expect_names(must.include = c("cohortId","generationStatus", "startTime","endTime","buildInfo"))
+
+  cohortGeneratorResults$generationStatus |> expect_equal(c("COMPLETE", "COMPLETE"))
+
+  cohortGeneratorResults$buildInfo[[1]]$logTibble$message |> expect_equal("All person_source_values were found")
+  cohortGeneratorResults$buildInfo[[1]]$logTibble$message[[1]] |> expect_equal("All person_source_values were found")
+  cohortGeneratorResults$buildInfo[[2]]$logTibble$message[[2]] |> expect_equal("5 cohort_start_dates were missing and set to the first observation date")
 
 })
 
@@ -208,22 +225,22 @@ test_that("cohortDataToCohortDefinitionSet reports missing cohort_end_date", {
   )
 
   # function
-  generateCohortSetResults <- CohortGenerator_generateCohortSet(
+  cohortGeneratorResults <- CohortGenerator_generateCohortSet(
     connection = connection,
     cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
-    cohortDefinitionSet = cohortDefinitionSet
+    cohortDefinitionSet = cohortDefinitionSet,
+    incremental = FALSE
   )
 
   # expectations
-  generateCohortSetResults |> tidyr::unnest(extraInfo) |>
-    dplyr::select(n_source_person, n_source_entries, n_missing_source_person, n_missing_cohort_start, n_missing_cohort_end) |>
-    expect_equal(tibble::tibble(
-      n_source_person = c(5, 5),
-      n_source_entries = c(5, 5),
-      n_missing_source_person = c(0, 0),
-      n_missing_cohort_start = c(0, 0),
-      n_missing_cohort_end = c(5, 0)
-    ))
+  cohortGeneratorResults |> checkmate::expect_tibble()
+  cohortGeneratorResults |> names() |> checkmate::expect_names(must.include = c("cohortId","generationStatus", "startTime","endTime","buildInfo"))
+
+  cohortGeneratorResults$generationStatus |> expect_equal(c("COMPLETE", "COMPLETE"))
+
+  cohortGeneratorResults$buildInfo[[1]]$logTibble$message[[1]] |> expect_equal("All person_source_values were found")
+  cohortGeneratorResults$buildInfo[[1]]$logTibble$message[[2]] |> expect_equal("5 cohort_end_dates were missing and set to the first observation date")
+  cohortGeneratorResults$buildInfo[[2]]$logTibble$message[[1]] |> expect_equal("All person_source_values were found")
 
 })
 
@@ -276,22 +293,22 @@ test_that("cohortDataToCohortDefinitionSet also works from imported files", {
   )
 
   # function
-  generateCohortSetResults <- CohortGenerator_generateCohortSet(
+  cohortGeneratorResults <- CohortGenerator_generateCohortSet(
     connection = connection,
     cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
-    cohortDefinitionSet = cohortDefinitionSet
+    cohortDefinitionSet = cohortDefinitionSet,
+    incremental = FALSE
   )
 
   # expectations
-  generateCohortSetResults |> tidyr::unnest(extraInfo) |>
-    dplyr::select(n_source_person, n_source_entries, n_missing_source_person, n_missing_cohort_start, n_missing_cohort_end) |>
-    expect_equal(tibble::tibble(
-      n_source_person = c(5, 5),
-      n_source_entries = c(5, 5),
-      n_missing_source_person = c(0, 0),
-      n_missing_cohort_start = c(0, 0),
-      n_missing_cohort_end = c(5, 0)
-    ))
+  cohortGeneratorResults |> checkmate::expect_tibble()
+  cohortGeneratorResults |> names() |> checkmate::expect_names(must.include = c("cohortId","generationStatus", "startTime","endTime","buildInfo"))
+
+  cohortGeneratorResults$generationStatus |> expect_equal(c("COMPLETE", "COMPLETE"))
+
+  cohortGeneratorResults$buildInfo[[1]]$logTibble$message[[1]] |> expect_equal("All person_source_values were found")
+  cohortGeneratorResults$buildInfo[[1]]$logTibble$message[[2]] |> expect_equal("5 cohort_end_dates were missing and set to the first observation date")
+  cohortGeneratorResults$buildInfo[[2]]$logTibble$message[[1]] |> expect_equal("All person_source_values were found")
 
 })
 
@@ -324,7 +341,7 @@ test_that("cohortDataToCohortDefinitionSet incremental mode do not create the tm
   )
 
   # function
-  generateCohortSetResults <- CohortGenerator_generateCohortSet(
+  cohortGeneratorResults <- CohortGenerator_generateCohortSet(
     connection = connection,
     cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
     cohortDefinitionSet = cohortDefinitionSet,
@@ -333,7 +350,7 @@ test_that("cohortDataToCohortDefinitionSet incremental mode do not create the tm
   )
 
   # expectations
-  generateCohortSetResults |> tidyr::unnest(extraInfo) |>
+  cohortGeneratorResults |> tidyr::unnest(extraInfo) |>
     dplyr::select(n_source_person, n_source_entries, n_missing_source_person, n_missing_cohort_start, n_missing_cohort_end) |>
     expect_equal(tibble::tibble(
       n_source_person = c(5, 5),

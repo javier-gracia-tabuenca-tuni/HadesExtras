@@ -90,9 +90,11 @@ test_that(" cohortDataToCohortDefinitionSet works", {
   cohortDefinitionSet <- cohortDataToCohortDefinitionSet(cohortData)
 
   cohortDefinitionSet |> checkmate::expect_tibble()
-  cohortDefinitionSet |> names() |> checkmate::expect_subset(c("cohortId", "cohortName", "json", "sql" ))
+  cohortDefinitionSet |> names() |> checkmate::expect_names(must.include = c("cohortId", "cohortName", "json", "sql" ))
   cohortDefinitionSet |> pull(json) |> stringr::str_detect('cohortType\": \"FromCohortData\"') |> all() |> expect_true()
   (cohortDefinitionSet |> pull(sql) |> unique() |> length() == cohortDefinitionSet |> nrow()) |> expect_true()
+  cohortDefinitionSet$sql[[1]] |> stringr::str_detect("WHERE cohort_definition_id = 1") |> expect_true()
+  cohortDefinitionSet$sql[[2]] |> stringr::str_detect("WHERE cohort_definition_id = 2") |> expect_true()
 
 })
 

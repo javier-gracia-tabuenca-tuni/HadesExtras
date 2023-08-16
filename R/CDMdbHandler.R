@@ -21,19 +21,35 @@
 #' @export
 CDMdbHandler <- R6::R6Class(
   classname = "CDMdbHandler",
-  public = list(
-    databaseName = NULL,
+  private = list(
+    .databaseName = NULL,
     # database parameters
-    connectionHandler = NULL,
-    vocabularyDatabaseSchema = NULL,
-    cdmDatabaseSchema = NULL,
-    connectionStatusLog = NULL,
+    .connectionHandler = NULL,
+    .vocabularyDatabaseSchema = NULL,
+    .cdmDatabaseSchema = NULL,
+    .connectionStatusLog = NULL,
     #
-    vocabularyInfo = NULL,
-    CDMInfo = NULL,
+    .vocabularyInfo = NULL,
+    .CDMInfo = NULL,
     #
-    getTblVocabularySchema = NULL,
-    getTblCDMSchema = NULL,
+    .getTblVocabularySchema = NULL,
+    .getTblCDMSchema = NULL
+  ),
+  active = list(
+    databaseName = function(){return(private$.databaseName)},
+    # database parameters
+    connectionHandler = function(){return(private$.connectionHandler)},
+    vocabularyDatabaseSchema = function(){return(private$.vocabularyDatabaseSchema)},
+    cdmDatabaseSchema = function(){return(private$.cdmDatabaseSchema)},
+    connectionStatusLog = function(){return(private$.connectionStatusLog)},
+    #
+    vocabularyInfo = function(){return(private$.vocabularyInfo)},
+    CDMInfo = function(){return(private$.CDMInfo)},
+    #
+    getTblVocabularySchema = function(){return(private$.getTblVocabularySchema)},
+    getTblCDMSchema = function(){return(private$.getTblCDMSchema)}
+  ),
+  public = list(
     #'
     #' @param connectionHandler             A ConnectionHandler object
     #' @param cdmDatabaseSchema             Name of the CDM database schema
@@ -48,24 +64,19 @@ CDMdbHandler <- R6::R6Class(
       checkmate::assertString(cdmDatabaseSchema)
       checkmate::assertString(vocabularyDatabaseSchema)
 
-      self$databaseName <- databaseName
-      self$connectionHandler <- connectionHandler
-      self$vocabularyDatabaseSchema <- vocabularyDatabaseSchema
-      self$cdmDatabaseSchema <- cdmDatabaseSchema
+      private$.databaseName <- databaseName
+      private$.connectionHandler <- connectionHandler
+      private$.vocabularyDatabaseSchema <- vocabularyDatabaseSchema
+      private$.cdmDatabaseSchema <- cdmDatabaseSchema
 
-      self$loadConnection()
-
-      lockBinding("databaseName", self)
-      lockBinding("connectionHandler", self)
-      lockBinding("vocabularyDatabaseSchema", self)
-      lockBinding("cdmDatabaseSchema", self)
+      private$.loadConnection()
     },
 
     #' Finalize method
     #' @description
     #' Closes the connection if active.
     finalize = function() {
-      self$connectionHandler$finalize()
+      private$.connectionHandler$finalize()
     },
 
     #' Reload connection
@@ -78,7 +89,7 @@ CDMdbHandler <- R6::R6Class(
       errorMessage <- ""
       tryCatch(
         {
-          self$connectionHandler$initConnection()
+          private$.connectionHandler$initConnection()
         },
         error = function(error) {
           errorMessage <<- error$message
@@ -86,7 +97,7 @@ CDMdbHandler <- R6::R6Class(
         warning = function(warning){}
       )
 
-      if (errorMessage != "" | !self$connectionHandler$dbIsValid()) {
+      if (errorMessage != "" | !private$.connectionHandler$dbIsValid()) {
         connectionStatusLog$ERROR("Check database connection", errorMessage)
       } else {
         connectionStatusLog$INFO("Check database connection", "Valid connection")
@@ -96,9 +107,9 @@ CDMdbHandler <- R6::R6Class(
       errorMessage <- ""
       tryCatch(
         {
-          self$connectionHandler$getConnection() |>
+          private$.connectionHandler$getConnection() |>
             tmp_dplyr_copy_to(cars, overwrite = TRUE)
-          self$connectionHandler$getConnection() |>
+          private$.connectionHandler$getConnection() |>
             DatabaseConnector::dropEmulatedTempTables()
         },
         error = function(error) {
@@ -132,12 +143,12 @@ CDMdbHandler <- R6::R6Class(
             "drug_strength"
           )
 
-          tablesInVocabularyDatabaseSchema <- DatabaseConnector::getTableNames(self$connectionHandler$getConnection(), self$vocabularyDatabaseSchema)
+          tablesInVocabularyDatabaseSchema <- DatabaseConnector::getTableNames(private$.connectionHandler$getConnection(), private$.vocabularyDatabaseSchema)
 
           vocabularyTablesInVocabularyDatabaseSchema <- intersect(vocabularyTableNames, tablesInVocabularyDatabaseSchema)
 
           for (tableName in vocabularyTablesInVocabularyDatabaseSchema) {
-            text <- paste0('function() { self$connectionHandler$tbl( "',tableName, '", "', self$vocabularyDatabaseSchema,'")}')
+            text <- paste0('function() { private$.connectionHandler$tbl( "',tableName, '", "', private$.vocabularyDatabaseSchema,'")}')
             getTblVocabularySchema[[tableName]] <- eval(parse(text = text))
           }
 
@@ -198,12 +209,12 @@ CDMdbHandler <- R6::R6Class(
             "cdm_source"
           )
 
-          tablesInCdmDatabaseSchema <- DatabaseConnector::getTableNames(self$connectionHandler$getConnection(), self$cdmDatabaseSchema)
+          tablesInCdmDatabaseSchema <- DatabaseConnector::getTableNames(private$.connectionHandler$getConnection(), private$.cdmDatabaseSchema)
 
           vocabularyTablesInCdmDatabaseSchema <- intersect(cdmTableNames, tablesInCdmDatabaseSchema)
 
           for (tableName in vocabularyTablesInCdmDatabaseSchema) {
-            text <- paste0('function() { self$connectionHandler$tbl( "',tableName, '", "', self$cdmDatabaseSchema,'")}')
+            text <- paste0('function() { private$.connectionHandler$tbl( "',tableName, '", "', private$.cdmDatabaseSchema,'")}')
             getTblCDMSchema[[tableName]] <- eval(parse(text = text))
           }
 
@@ -227,29 +238,19 @@ CDMdbHandler <- R6::R6Class(
 
 
       # update status
-      unlockBinding("vocabularyInfo", self)
-      unlockBinding("CDMInfo", self)
-      unlockBinding("connectionStatusLog", self)
-      unlockBinding("getTblVocabularySchema", self)
-      unlockBinding("getTblCDMSchema", self)
-      self$vocabularyInfo <- vocabularyInfo
-      self$CDMInfo <- CDMInfo
-      self$connectionStatusLog <- connectionStatusLog
-      self$getTblVocabularySchema <- getTblVocabularySchema
-      self$getTblCDMSchema <- getTblCDMSchema
-      lockBinding("vocabularyInfo", self)
-      lockBinding("CDMInfo", self)
-      lockBinding("connectionStatusLog", self)
-      lockBinding("getTblVocabularySchema", self)
-      lockBinding("getTblCDMSchema", self)
+      private$.vocabularyInfo <- vocabularyInfo
+      private$.CDMInfo <- CDMInfo
+      private$.connectionStatusLog <- connectionStatusLog
+      private$.getTblVocabularySchema <- getTblVocabularySchema
+      private$.getTblCDMSchema <- getTblCDMSchema
     },
 
     #' Get connection status
     #' @description
     #' gets tibble with database name and connection status.
     getConnectionStatus = function() {
-      self$connectionStatusLog$logTibble |>
-        dplyr::mutate(databaseName = self$databaseName) |>
+      private$.connectionStatusLog$logTibble |>
+        dplyr::mutate(databaseName = private$.databaseName) |>
         dplyr::relocate(databaseName, .before = 1)
 
     }

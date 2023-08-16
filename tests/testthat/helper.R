@@ -1,24 +1,4 @@
 
-
-
-helper_getNewCohortTableHandler <- function(){
-  testSelectedConfiguration  <- getOption("testSelectedConfiguration")
-
-  connectionHandler <- ResultModelManager_createConnectionHandler(
-    connectionDetailsSettings = testSelectedConfiguration$connection$connectionDetailsSettings,
-    tempEmulationSchema = testSelectedConfiguration$connection$tempEmulationSchema
-  )
-  cohortTableHandler <- CohortTableHandler$new(
-    connectionHandler = connectionHandler,
-    cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
-    vocabularyDatabaseSchema = testSelectedConfiguration$cdm$vocabularyDatabaseSchema,
-    cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema,
-    cohortTableName = testSelectedConfiguration$cohortTable$cohortTableName
-  )
-  return(cohortTableHandler)
-}
-
-
 helper_getConnection <- function(){
   connectionDetailsSettings <- testSelectedConfiguration$connection$connectionDetailsSettings
 
@@ -32,6 +12,29 @@ helper_getConnection <- function(){
 
   return(connection)
 }
+
+# helper_getConnectionToDatabaseWithFilledCohortTable <- function(variables) {
+#
+#   connections <- helper_getConnection()
+#
+#   CohortGenerator::createCohortTables(
+#     connection = connection,
+#     cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema
+#   )
+#
+#   cohortDefinitionSet <- CohortGenerator::getCohortDefinitionSet(
+#     settingsFileName = "inst/testdata/matching/Cohorts.csv",
+#     jsonFolder = "inst/testdata/matching/cohorts",
+#     sqlFolder = "inst/testdata/matching/sql/sql_server",
+#     cohortFileNameFormat = "%s",
+#     cohortFileNameValue = c("cohortName"),
+#     #packageName = "HadesExtras",
+#     verbose = FALSE
+#   )
+#
+#   CohortGenerator::
+#
+# }
 
 
 helper_getParedSourcePersonAndPersonIds  <- function(
@@ -54,7 +57,21 @@ helper_getParedSourcePersonAndPersonIds  <- function(
 
 
 
-
+helper_getNewCohortTableHandler <- function(){
+  connectionHandler <- ResultModelManager_createConnectionHandler(
+    connectionDetailsSettings = testSelectedConfiguration$connection$connectionDetailsSettings,
+    tempEmulationSchema = testSelectedConfiguration$connection$tempEmulationSchema
+  )
+  cohortTableHandler <- CohortTableHandler$new(
+    connectionHandler = connectionHandler,
+    databaseName = testSelectedConfiguration$databaseName,
+    cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
+    vocabularyDatabaseSchema = testSelectedConfiguration$cdm$vocabularyDatabaseSchema,
+    cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema,
+    cohortTableName = testSelectedConfiguration$cohortTable$cohortTableName
+  )
+  return(cohortTableHandler)
+}
 
 
 
@@ -71,7 +88,7 @@ helper_createCohortTableWithTestData <- function(
     numberPersonsPerCohort = 5,
     baseStartDate = "2000-01-01",
     baseEndDate = "2020-01-01"
-    ){
+){
 
   numberCohorts <- length(testCohortNames)
 
@@ -110,28 +127,6 @@ helper_createCohortTableWithTestData <- function(
   )
 
 }
-
-
-helper_getParedSourcePersonAndPersonIds  <- function(connection,
-                                                     cohortDatabaseSchema,
-                                                     numberPersons){
-
-  # Connect, collect tables
-  personTable <- dplyr::tbl(connection, tmp_inDatabaseSchema(cohortDatabaseSchema, "person"))
-
-  # get first n persons
-  pairedSourcePersonAndPersonIds  <- personTable  |>
-    dplyr::arrange(person_id) |>
-    dplyr::select(person_id, person_source_value) |>
-    dplyr::collect(n=numberPersons)
-
-
-  return(pairedSourcePersonAndPersonIds)
-}
-
-
-
-
 
 
 

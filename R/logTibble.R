@@ -22,7 +22,7 @@ LogTibble <- R6::R6Class(
     #' Initializes a new LogTibble object.
     initialize = function() {
       private$log <- tibble::tibble(
-        type = factor(NA, levels = c("INFO", "WARNING", "ERROR")),
+        type = factor(NA, levels = c("INFO", "WARNING", "ERROR", "SUCCESS")),
         step = character(0),
         message = character(0),
         .rows = 0L
@@ -33,20 +33,20 @@ LogTibble <- R6::R6Class(
     #' @description
     #' Adds a log message to the log tibble.
     #'
-    #' @param type     Type of log message ("INFO", "WARNING", "ERROR")
+    #' @param type     Type of log message ("INFO", "WARNING", "ERROR", "SUCCESS")
     #' @param step     Step or description associated with the log message
     #' @param message  Log message content
     #' @param ...      Additional parameters for message formatting
     addLog = function(type, step, message, ...) {
       private$log <- private$log  |>
         dplyr::add_row(
-          type = factor(type, levels = c("INFO", "WARNING", "ERROR")),
+          type = factor(type, levels = c("INFO", "WARNING", "ERROR", "SUCCESS")),
           step = step,
           message = paste(message, ...)
         )
     },
 
-    #' addInfo
+    #' INFO
     #' @description
     #' Adds an informational log message to the log tibble.
     #'
@@ -57,7 +57,7 @@ LogTibble <- R6::R6Class(
       self$addLog("INFO", step, message, ...)
     },
 
-    #' addWarning
+    #' WARNING
     #' @description
     #' Adds a warning log message to the log tibble.
     #'
@@ -68,7 +68,7 @@ LogTibble <- R6::R6Class(
       self$addLog("WARNING", step, message, ...)
     },
 
-    #' addError
+    #' ERROR
     #' @description
     #' Adds an error log message to the log tibble.
     #'
@@ -77,6 +77,17 @@ LogTibble <- R6::R6Class(
     #' @param ...      Additional parameters for message formatting
     ERROR = function(step, message, ...) {
       self$addLog("ERROR", step, message, ...)
+    },
+
+    #' SUCCESS
+    #' @description
+    #' Adds an error log message to the log tibble.
+    #'
+    #' @param step     Step or description associated with the log message
+    #' @param message  Log message content
+    #' @param ...      Additional parameters for message formatting
+    SUCCESS = function(step, message, ...) {
+      self$addLog("SUCCESS", step, message, ...)
     },
 
     #' print

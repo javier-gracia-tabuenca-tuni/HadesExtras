@@ -152,18 +152,29 @@ cohortDataToCohortDefinitionSet <- function(
   #
   # Function
   #
+  sqlToRender <- SqlRender::readSql(system.file("sql/sql_server/ImportCohortTable.sql", package = "HadesExtras", mustWork = TRUE))
+
   cohortDefinitionSet <- cohortData |>
     tidyr::nest(.key = "cohort", .by = c("cohort_name")) |>
     dplyr::transmute(
       cohortId = dplyr::row_number()+cohortIdOffset,
       cohortName = cohort_name,
       json = purrr::map_chr(.x = cohort, .f=.cohortDataToJson),
-      sql = purrr::map_chr(.x = json, .f=~{paste0("-- ", digest::digest(.x))})
+      sql = purrr::map2_chr(
+        .x = cohortId,
+        .y = cohort,
+        .f=~{paste0("--",  digest::digest(.y), "\n",
+                   SqlRender::render(
+                     sql = sqlToRender,
+                     source_cohort_table = getOption("cohortDataImportTmpTableName", "tmp_cohortdata"),
+                     source_cohort_id = .x,
+                     is_temp_table = TRUE
+                   ))}
+      )
     )
 
   return(cohortDefinitionSet)
 }
-
 
 
 .cohortDataToJson <- function(cohortData){
@@ -173,6 +184,25 @@ cohortDataToCohortDefinitionSet <- function(
       cohortData = cohortData
     )
   )
+}
+
+.jsonToCohortData <- function(cohortDefinitionSet) {
+
+  cohortData <- cohortDefinitionSet |>
+    dplyr::mutate(
+      data = purrr::map(.x=json, .f = ~{
+        l <- RJSONIO::fromJSON(.x, nullValue = as.character(NA), simplify = TRUE)
+        l$cohortData |>
+          tibble::as_tibble() |>
+          dplyr::mutate(
+            cohort_start_date = as.Date(cohort_start_date),
+            cohort_end_date = as.Date(cohort_end_date)
+          )
+      })
+    ) |>
+    dplyr::select(cohortId, data) |>
+    tidyr::unnest(data) |>
+    dplyr::rename(cohort_definition_id = cohortId)
 
 }
 
