@@ -3,7 +3,7 @@
 test_that("CohortTableHandler creates object with correct params", {
 
   cohortTableHandler <- helper_getNewCohortTableHandler()
-  on.exit({cohortTableHandler$finalize()})
+  #on.exit({cohortTableHandler$finalize()})
 
   cohortTableHandler |> checkmate::expect_class("CohortTableHandler")
   cohortTableHandler$connectionStatusLog |> checkmate::expect_class("LogTibble")
@@ -18,7 +18,7 @@ test_that("CohortTableHandler creates object with correct params", {
 test_that("CohortTableHandler$insertOrUpdateCohorts adds a cohort", {
 
   cohortTableHandler <- helper_getNewCohortTableHandler()
-  on.exit({cohortTableHandler$finalize()})
+  #on.exit({cohortTableHandler$finalize()})
 
   cohortDefinitionSet <- tibble::tibble(
     cohortId = 10,
@@ -43,7 +43,7 @@ test_that("CohortTableHandler$insertOrUpdateCohorts adds a cohort", {
 test_that("CohortTableHandler$insertOrUpdateCohorts warns when cohortId exists and upadte it", {
 
   cohortTableHandler <- helper_getNewCohortTableHandler()
-  on.exit({cohortTableHandler$finalize()})
+  #on.exit({cohortTableHandler$finalize()})
 
   cohortDefinitionSet <- tibble::tibble(
     cohortId = 10,
@@ -79,7 +79,7 @@ test_that("CohortTableHandler$insertOrUpdateCohorts warns when cohortId exists a
 test_that("CohortTableHandler$insertOrUpdateCohorts errors with wrong sql", {
 
   cohortTableHandler <- helper_getNewCohortTableHandler()
-  on.exit({cohortTableHandler$finalize()})
+  #on.exit({cohortTableHandler$finalize()})
 
   cohortDefinitionSet <- tibble::tibble(
     cohortId = 10,
@@ -97,7 +97,7 @@ test_that("CohortTableHandler$insertOrUpdateCohorts errors with wrong sql", {
 test_that("CohortTableHandler$insertOrUpdateCohorts can insert a cohort with no subjects, and summary returns a sanitised tibble", {
 
   cohortTableHandler <- helper_getNewCohortTableHandler()
-  on.exit({cohortTableHandler$finalize()})
+  #on.exit({cohortTableHandler$finalize()})
 
   cohortDefinitionSet <- tibble::tibble(
     cohortId = 10,
@@ -115,7 +115,7 @@ test_that("CohortTableHandler$insertOrUpdateCohorts can insert a cohort with no 
   cohortsSummary$cohortSubjects |> expect_equal(0)
   cohortsSummary$histogramCohortStartYear[[1]] |> nrow() |> expect_equal(0)
   cohortsSummary$histogramCohortEndYear[[1]] |> nrow() |> expect_equal(0)
-  cohortsSummary$countSex[[1]] |> nrow() |> expect_equal(0)
+  cohortsSummary$sexCounts[[1]] |> nrow() |> expect_equal(0)
   cohortsSummary$buildInfo[[1]]$logTibble$message |> expect_equal("Cohort is empty")
 
 })
@@ -126,7 +126,7 @@ test_that("CohortTableHandler$insertOrUpdateCohorts can insert a cohort with no 
 test_that("CohortTableHandler$deleteCohorts deletes a cohort and cohortsSummary", {
 
   cohortTableHandler <- helper_getNewCohortTableHandler()
-  on.exit({cohortTableHandler$finalize()})
+  #on.exit({cohortTableHandler$finalize()})
 
   cohortDefinitionSet <- tibble::tibble(
     cohortId = c(10,20),
@@ -161,7 +161,7 @@ test_that("CohortTableHandler$deleteCohorts deletes a cohort and cohortsSummary"
 test_that("CohortTableHandler$cohortsSummary return a tibbe with data", {
 
   cohortTableHandler <- helper_getNewCohortTableHandler()
-  on.exit({cohortTableHandler$finalize()})
+  #on.exit({cohortTableHandler$finalize()})
 
   cohortDefinitionSet <- tibble::tibble(
     cohortId = c(10,20),

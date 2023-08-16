@@ -332,7 +332,35 @@ test_that("cohortDataToCohortDefinitionSet incremental mode do not create the tm
   cohort_data <- tibble::tibble(
     cohort_name = rep(c("Cohort A", "Cohort B"), 5),
     person_source_value = sourcePersonToPersonId$person_source_value,
-    cohort_start_date = rep(as.Date(c("2020-01-01", "2020-01-04")), 5),
+    cohort_start_date = rep(as.Date(c("2020-01-01", "2020-01-01")), 5),
+    cohort_end_date = rep(as.Date(c("2020-01-03", "2020-01-04")), 5)
+  )
+
+  cohortDefinitionSet <- cohortDataToCohortDefinitionSet(
+    cohortData = cohort_data
+  )
+
+  incrementalFolder <- file.path(tempdir(),stringr::str_remove_all(Sys.time(),"-|:|\\.|\\s"))
+  on.exit({unlink(incrementalFolder, recursive = TRUE)})
+
+  cohortGeneratorResults <- CohortGenerator_generateCohortSet(
+    connection = connection,
+    cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
+    cohortDefinitionSet = cohortDefinitionSet,
+    incremental = TRUE,
+    incrementalFolder = incrementalFolder
+  )
+
+  # expectations first run
+  cohortGeneratorResults$generationStatus |> expect_equal(c("COMPLETE", "COMPLETE"))
+  cohortGeneratorResults$buildInfo[[1]]$logTibble$message |> expect_equal("All person_source_values were found")
+  cohortGeneratorResults$buildInfo[[2]]$logTibble$message |> expect_equal("All person_source_values were found")
+
+
+  cohort_data <- tibble::tibble(
+    cohort_name = rep(c("Cohort A", "Cohort B"), 5),
+    person_source_value = sourcePersonToPersonId$person_source_value,
+    cohort_start_date = rep(as.Date(c("2020-01-01", "2020-01-01")), 5),
     cohort_end_date = rep(as.Date(c(NA, "2020-01-04")), 5)
   )
 
@@ -340,24 +368,19 @@ test_that("cohortDataToCohortDefinitionSet incremental mode do not create the tm
     cohortData = cohort_data
   )
 
-  # function
   cohortGeneratorResults <- CohortGenerator_generateCohortSet(
     connection = connection,
     cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
     cohortDefinitionSet = cohortDefinitionSet,
     incremental = TRUE,
-    incrementalFolder = tempdir()
+    incrementalFolder = incrementalFolder
   )
 
-  # expectations
-  cohortGeneratorResults |> tidyr::unnest(extraInfo) |>
-    dplyr::select(n_source_person, n_source_entries, n_missing_source_person, n_missing_cohort_start, n_missing_cohort_end) |>
-    expect_equal(tibble::tibble(
-      n_source_person = c(5, 5),
-      n_source_entries = c(5, 5),
-      n_missing_source_person = c(0, 0),
-      n_missing_cohort_start = c(0, 0),
-      n_missing_cohort_end = c(5, 0)
-    ))
+  # expectations firt run
+  cohortGeneratorResults$generationStatus |> expect_equal(c("COMPLETE", "SKIPPED"))
+
+  cohortGeneratorResults$buildInfo[[1]]$logTibble$message[[1]] |> expect_equal("All person_source_values were found")
+  cohortGeneratorResults$buildInfo[[1]]$logTibble$message[[2]] |> expect_equal("5 cohort_end_dates were missing and set to the first observation date")
+  cohortGeneratorResults$buildInfo[[2]]$logTibble |> nrow() |> expect_equal(0)
 
 })

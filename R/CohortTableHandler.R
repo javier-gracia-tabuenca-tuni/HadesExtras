@@ -85,7 +85,7 @@ CohortTableHandler <- R6::R6Class(
     #' @description
     #' Closes the connection if active.
     finalize = function() {
-      browser()
+
       CohortGenerator::dropCohortStatsTables(
         connection = self$connectionHandler$getConnection(),
         cohortDatabaseSchema = self$cohortDatabaseSchema,
@@ -252,6 +252,7 @@ CohortTableHandler <- R6::R6Class(
     #'
     #' @return A tibble containing cohort summary.
     getCohortsSummary  = function(){
+
       cohortsSummaryWithNames <- private$.cohortDefinitionSet |> dplyr::select(cohortName, cohortId) |>
         dplyr::mutate(
           databaseName = super$databaseName,

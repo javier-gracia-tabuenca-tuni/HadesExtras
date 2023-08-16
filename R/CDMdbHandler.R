@@ -69,7 +69,7 @@ CDMdbHandler <- R6::R6Class(
       private$.vocabularyDatabaseSchema <- vocabularyDatabaseSchema
       private$.cdmDatabaseSchema <- cdmDatabaseSchema
 
-      private$.loadConnection()
+      self$loadConnection()
     },
 
     #' Finalize method

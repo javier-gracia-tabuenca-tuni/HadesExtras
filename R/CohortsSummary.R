@@ -7,29 +7,38 @@
 createEmptyCohortsSummary <- function() {
 
   emptyCohortsSummary <- tibble::tibble(
-    cohortName = as.character(NA),
+    databaseName = as.character(NA),
     cohortId = as.double(NA),
-    sourceCohortId = as.double(NA),
-    cohortDescription = as.character(NA),
+    shortName = as.character(NA),
+    cohortName = as.character(NA),
     cohortEntries = as.integer(NA),
     cohortSubjects = as.integer(NA),
-    histogram_cohort_start_year = list(
+    histogramCohortStartYear = list(
       tibble::tibble(
         year = as.integer(NA),
         n = as.integer(NA),
         .rows = 0)
       ),
-    histogram_cohort_end_year = list(
+    histogramCohortEndYear = list(
       tibble::tibble(
         year = as.integer(NA),
         n = as.integer(NA),
         .rows = 0)
       ),
-    count_sex = list(
+    histogramBirthYear = list(
+      tibble::tibble(
+        year = as.integer(NA),
+        n = as.integer(NA),
+        .rows = 0)
+    ),
+    sexCounts = list(
       tibble::tibble(
         sex = as.character(NA),
         n = as.integer(NA),
         .rows = 0)),
+    buildInfo = list(
+      LogTibble$new()
+    ),
     .rows = 0 )
 
   return(emptyCohortsSummary)
@@ -44,25 +53,30 @@ createEmptyCohortsSummary <- function() {
 #'
 correctEmptyCohortsInCohortsSummary <- function(cohortsSummary) {
 
-  empty_histogram = list(
+  emptyHistogram = list(
     tibble::tibble(
       year = as.integer(NA),
       n = as.integer(NA),
       .rows = 0)
   )
-  empty_count_sex = list(
+  emptysexCounts = list(
     tibble::tibble(
       sex = as.character(NA),
       n = as.integer(NA),
       .rows = 0))
 
+  log <- LogTibble$new()
+  log$ERROR("", "Cohort is empty")
+
   cohortsSummary <- cohortsSummary |>
     dplyr::mutate(
-      histogram_cohort_start_year = dplyr::if_else(is.na(cohortEntries), empty_histogram, histogram_cohort_start_year),
-      histogram_cohort_end_year = dplyr::if_else(is.na(cohortEntries), empty_histogram, histogram_cohort_end_year),
-      count_sex = dplyr::if_else(is.na(cohortEntries), empty_count_sex, count_sex),
-      cohortEntries = dplyr::if_else(is.na(cohortEntries), 0L, cohortEntries),
-      cohortSubjects = dplyr::if_else(is.na(cohortSubjects), 0L, cohortSubjects)
+      histogramCohortStartYear = dplyr::if_else(is.na(cohortEntries), emptyHistogram, histogramCohortStartYear),
+      histogramCohortEndYear = dplyr::if_else(is.na(cohortEntries), emptyHistogram, histogramCohortEndYear),
+      histogramBirthYear = dplyr::if_else(is.na(cohortEntries), emptyHistogram, histogramBirthYear),
+      sexCounts = dplyr::if_else(is.na(cohortEntries), emptysexCounts, sexCounts),
+      buildInfo = dplyr::if_else(is.na(cohortEntries), list(log$clone()), buildInfo),
+      cohortEntries = dplyr::if_else(is.na(cohortEntries), 0L, as.integer(cohortEntries)),
+      cohortSubjects = dplyr::if_else(is.na(cohortSubjects), 0L, as.integer(cohortSubjects))
     )
 
   return(cohortsSummary)
