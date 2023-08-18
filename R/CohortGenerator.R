@@ -346,7 +346,7 @@ CohortGenerator_getCohortDemograpics <- function(
     cohortIds = cohortIds,
     cohortDefinitionSet = cohortDefinitionSet,
     databaseId = databaseId
-  )
+  ) |> tibble::as_tibble()
 
   histogramCohortStartYear <-  tibble::tibble(cohort_definition_id=0, .rows = 0)
   if ("histogramCohortStartYear" %in% toGet) {

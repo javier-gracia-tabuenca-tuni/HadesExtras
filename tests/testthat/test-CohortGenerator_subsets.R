@@ -4,14 +4,16 @@
 #
 test_that("Matching subset naming and instantitation", {
   matchingSubsetNamed <- createMatchingSubset(
+    name = NULL,
     matchToCohortId = 11,
+    matchRatio = 10,
     matchSex = TRUE,
     matchBirthYear = TRUE,
-    matchRatio = 10,
-    startWindowAsTarget = TRUE,
-    endWindowAsTarget = TRUE
+    matchCohortStartDateWithInDuration = FALSE,
+    newCohortStartDate = "asMatch",
+    newCohortEndDate = "asMatch"
   )
-  expectedName <- "Match to cohort 11 by sex and birth year with ratio 1:10; cohort start date as matching cohort; cohort end date as matching cohort"
+  expectedName <- "Match to cohort 11 by sex and birth year with ratio 1:10; cohort start date as in matched subject; cohort end date as in matched subject"
   expect_equal(expectedName, matchingSubsetNamed$name)
 
   matchingSubsetNamed$name <- "foo"
@@ -22,8 +24,8 @@ test_that("Matching subset naming and instantitation", {
     matchSex = TRUE,
     matchBirthYear = FALSE,
     matchRatio = 100,
-    startWindowAsTarget = FALSE,
-    endWindowAsTarget = FALSE
+    newCohortStartDate = "keep",
+    newCohortEndDate = "keep"
   )
   expectedName <- "Match to cohort 110 by sex with ratio 1:100"
   expect_equal(expectedName, matchingSubsetNamed$name)
@@ -32,31 +34,22 @@ test_that("Matching subset naming and instantitation", {
 
 
 
-
 test_that("Matching Subset works for different parameters", {
 
-  connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+  connection <- helper_getConnection()
+  #on.exit({DatabaseConnector::dropEmulatedTempTables(connection); DatabaseConnector::disconnect(connection)})
 
   CohortGenerator::createCohortTables(
-    connectionDetails = connectionDetails,
-    cohortDatabaseSchema = "main",
-    cohortTableNames = CohortGenerator::getCohortTableNames("my_cohort")
+    connection = connection,
+    cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema,
+    cohortTableNames = CohortGenerator::getCohortTableNames(testSelectedConfiguration$cohortTable$cohortTableName)
   )
 
-  # cohortDefinitionSet <- CohortGenerator::getCohortDefinitionSet(
-  #   settingsFileName = "testdata/matching/Cohorts.csv",
-  #   jsonFolder = "testdata/matching/cohorts",
-  #   sqlFolder = "testdata/matching/sql/sql_server",
-  #   cohortFileNameFormat = "%s",
-  #   cohortFileNameValue = c("cohortName"),
-  #   packageName = "HadesExtras",
-  #   verbose = FALSE
-  # )
 
   cohortDefinitionSet <- CohortGenerator::getCohortDefinitionSet(
-    settingsFileName = "inst/testdata/matching/Cohorts.csv",
-    jsonFolder = "inst/testdata/matching/cohorts",
-    sqlFolder = "inst/testdata/matching/sql/sql_server",
+    settingsFileName = here::here("inst/testdata/matching/Cohorts.csv"),
+    jsonFolder = here::here("inst/testdata/matching/cohorts"),
+    sqlFolder = here::here("inst/testdata/matching/sql/sql_server"),
     cohortFileNameFormat = "%s",
     cohortFileNameValue = c("cohortName"),
     #packageName = "HadesExtras",
@@ -81,7 +74,47 @@ test_that("Matching Subset works for different parameters", {
       createMatchingSubset(
         matchToCohortId = 10,
         matchRatio = 20,
-        matchSex = FALSE,
+        matchSex = TRUE,
+        matchBirthYear = FALSE,
+        matchCohortStartDateWithInDuration = FALSE,
+        newCohortStartDate = "keep",
+        newCohortEndDate = "keep"
+      )
+    )
+  )
+
+  cohortDefinitionSetWithSubsetDef <- cohortDefinitionSet |>
+    CohortGenerator::addCohortSubsetDefinition(subsetDef, targetCohortIds = 20)
+
+  generatedCohorts <- CohortGenerator::generateCohortSet(
+    connection = connection,
+    cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
+    cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema,
+    cohortTableNames = CohortGenerator::getCohortTableNames(testSelectedConfiguration$cohortTable$cohortTableName),
+    cohortDefinitionSet = cohortDefinitionSetWithSubsetDef,
+    incremental = FALSE
+  )
+
+  cohortDemographics <- CohortGenerator_getCohortDemograpics(
+    connection = connection,
+    cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
+    cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema,
+    cohortTable = testSelectedConfiguration$cohortTable$cohortTableName
+  )
+
+  cohortDemographics$sexCounts[[3]]$n[[1]] |> expect_equal(20) # female
+  cohortDemographics$sexCounts[[3]]$n[[2]] |> expect_equal(10) # male, there is only 10 in controls
+
+
+  # Match to sex and bday, match ratio 20
+  subsetDef <- CohortGenerator::createCohortSubsetDefinition(
+    name = "",
+    definitionId = 300,
+    subsetOperators = list(
+      createMatchingSubset(
+        matchToCohortId = 10,
+        matchRatio = 20,
+        matchSex = TRUE,
         matchBirthYear = TRUE,
         matchCohortStartDateWithInDuration = FALSE,
         newCohortStartDate = "keep",
@@ -94,19 +127,69 @@ test_that("Matching Subset works for different parameters", {
     CohortGenerator::addCohortSubsetDefinition(subsetDef, targetCohortIds = 20)
 
   generatedCohorts <- CohortGenerator::generateCohortSet(
-    connectionDetails = connectionDetails,
-    cdmDatabaseSchema = "main",
-    cohortDatabaseSchema = "main",
-    cohortTableNames = getCohortTableNames("my_cohort"),
+    connection = connection,
+    cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
+    cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema,
+    cohortTableNames = CohortGenerator::getCohortTableNames(testSelectedConfiguration$cohortTable$cohortTableName),
     cohortDefinitionSet = cohortDefinitionSetWithSubsetDef,
     incremental = FALSE
   )
 
-  CohortGenerator::getCohortCounts(
-    connectionDetails = connectionDetails,
-    cohortDatabaseSchema = "main",
-    cohortTable = "my_cohort"
+  cohortDemographics <- CohortGenerator_getCohortDemograpics(
+    connection = connection,
+    cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
+    cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema,
+    cohortTable = testSelectedConfiguration$cohortTable$cohortTableName
   )
+
+  cohortDemographics$sexCounts[[3]]$n[[1]] |> expect_equal(10) # female, there is only 10
+  cohortDemographics$sexCounts[[3]]$n[[2]] |> expect_equal(10) # male, there is only 10 in controls
+  cohortDemographics$histogramBirthYear[[3]]$n[[1]] |> expect_equal(10) # 1970, there is only 10 in controls
+  cohortDemographics$histogramBirthYear[[3]]$n[[2]] |> expect_equal(10) # 1971, there is only 10 in controls
+
+
+  # Match to sex and bday and start day with in observation, keep startday
+  subsetDef <- CohortGenerator::createCohortSubsetDefinition(
+    name = "",
+    definitionId = 300,
+    subsetOperators = list(
+      createMatchingSubset(
+        matchToCohortId = 10,
+        matchRatio = 20,
+        matchSex = TRUE,
+        matchBirthYear = TRUE,
+        matchCohortStartDateWithInDuration = TRUE,
+        newCohortStartDate = "asMatch",
+        newCohortEndDate = "keep"
+      )
+    )
+  )
+
+  cohortDefinitionSetWithSubsetDef <- cohortDefinitionSet |>
+    CohortGenerator::addCohortSubsetDefinition(subsetDef, targetCohortIds = 20)
+
+  generatedCohorts <- CohortGenerator::generateCohortSet(
+    connection = connection,
+    cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
+    cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema,
+    cohortTableNames = CohortGenerator::getCohortTableNames(testSelectedConfiguration$cohortTable$cohortTableName),
+    cohortDefinitionSet = cohortDefinitionSetWithSubsetDef,
+    incremental = FALSE
+  )
+
+  cohortDemographics <- CohortGenerator_getCohortDemograpics(
+    connection = connection,
+    cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
+    cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema,
+    cohortTable = testSelectedConfiguration$cohortTable$cohortTableName
+  )
+
+  cohortDemographics$sexCounts[[3]]$n[[1]] |> expect_equal(10) # female, half
+  cohortDemographics$sexCounts[[3]]$n[[2]] |> expect_equal(6) # male, half
+  cohortDemographics$histogramBirthYear[[3]]$n[[1]] |> expect_equal(6) # 1970, there is only 10 in controls
+  cohortDemographics$histogramBirthYear[[3]]$n[[2]] |> expect_equal(10) # 1971, there is only 10 in controls
+
+  cohortDemographics$histogramBirthYear[[1]]$year |> expect_equal(cohortDemographics$histogramBirthYear[[3]]$year)
 
 
 })
