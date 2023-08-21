@@ -2,11 +2,14 @@
 % Please edit documentation in R/tmp_fixes.R
 \name{tmp_ConnectionHandler}
 \alias{tmp_ConnectionHandler}
-\title{get table}
+\title{tmp fix for ConnectionHandler}
 \description{
-get table
+tmp fix for ConnectionHandler
 
-get table
+tmp fix for ConnectionHandler
+}
+\details{
+till this is fixed https://github.com/OHDSI/DatabaseConnector/issues/236
 }
 \section{Super class}{
 \code{\link[ResultModelManager:ConnectionHandler]{ResultModelManager::ConnectionHandler}} -> \code{tmp_ConnectionHandler}

@@ -108,7 +108,6 @@ checkCohortData(cohortDataWithErrors)
 
 To copy the `cohortData` into the `cohort`it has to be converted to a `cohortDefinitionSet`.  
 
-`cohortDefinitionSet` needs a connections to the CDM because it checks if the `person_source_value` exists, and any of the cohort_start_date or cohort_end_date are empty, it will take it from the first or lattes observation period respectively.  
 
 ```{r}
 cohortDefinitionSet <- cohortDataToCohortDefinitionSet(
@@ -116,10 +115,6 @@ cohortDefinitionSet <- cohortDataToCohortDefinitionSet(
   )
 ```
 
-Column `extra_info` indicates info on the conversion
-```{r}
-cohortDefinitionSet |> purrr::pluck(5,1)
-```
 
 Copy `cohortDefinitionSet` to `cohort` table 
 
@@ -134,9 +129,12 @@ cohortTableHandler$getCohortCounts()
 
 
 ```{r}
-cohortTableHandler$getCohortsSummary()
+cohortsSummary <- cohortTableHandler$getCohortsSummary()
 ```
 
+```{r}
+rectable_cohortsSummary(cohortsSummary)
+```
 
 
 

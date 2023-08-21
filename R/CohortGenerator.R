@@ -1,4 +1,34 @@
-
+#' Wrap around CohortGenerator::generateCohortSet
+#'
+#' @description
+#' Wrap around CohortGenerator::generateCohortSet to be able to build cohorts based on cohortData.
+#' Checks if cohortDefinitionSet contais a cohort based on cohortData.
+#' If so, uploads cohortData found in the json column to the database and transforms that data in to a temporal table with cohortTable format.
+#' CohortGenerator::generateCohortSet is called and processes the sql column that will copy the contents of the temporal cohortTable to the
+#' target cohortTable.
+#' It adds a column to the restuls tibble, 'buildInfo' with a LogTibble with information on the cohort construction.
+#'
+#' @param connectionDetails as in CohortGenerator::generateCohortSet.
+#' @param connection as in CohortGenerator::generateCohortSet.
+#' @param cdmDatabaseSchema as in CohortGenerator::generateCohortSet.
+#' @param tempEmulationSchema as in CohortGenerator::generateCohortSet.
+#' @param cohortDatabaseSchema as in CohortGenerator::generateCohortSet.
+#' @param cohortTableNames as in CohortGenerator::generateCohortSet.
+#' @param cohortDefinitionSet as in CohortGenerator::generateCohortSet.
+#' @param stopOnError as in CohortGenerator::generateCohortSet.
+#' @param incremental as in CohortGenerator::generateCohortSet.
+#' @param incrementalFolder as in CohortGenerator::generateCohortSet.
+#'
+#' @returns resutls from CohortGenerator::generateCohortSet with additional column 'buildInfo'
+#'
+#' @importFrom checkmate assertDataFrame assertNames
+#' @importFrom DatabaseConnector connect disconnect dbExistsTable dbRemoveTable dropEmulatedTempTables executeSql
+#' @importFrom SqlRender render translate
+#' @importFrom dplyr mutate filter left_join if_else select arrange bind_rows
+#' @importFrom tidyr nest
+#' @importFrom purrr map map2
+#'
+#' @export
 
 CohortGenerator_generateCohortSet <- function(
     connectionDetails = NULL,
@@ -220,22 +250,23 @@ CohortGenerator_generateCohortSet <- function(
 
 
 
-#' Delete cohort from cohort table
+#' deleteCohortFromCohortTable
 #'
-#' This function deletes specified cohorts from the cohort table and cohort names table in the database.
+#' Deletes specified cohorts from a cohort table in a database.
 #'
-#' @param connectionDetails A list containing the necessary details to establish a database connection.
-#' @param schema The name of the schema where the cohort table and cohort names table are located.
-#' @param cohort_table_name The name of the cohort table.
-#' @param cohort_names A character vector of cohort names to be deleted.
+#' @param connectionDetails A list of database connection details (optional).
+#' @param connection A pre-established database connection (optional).
+#' @param cohortDatabaseSchema The schema name of the cohort database.
+#' @param cohortTableNames A list containing the name of the cohort table.
+#' @param cohortIds Numeric vector of cohort IDs to be deleted.
 #'
+#' @importFrom checkmate assertCharacter assertList assertNumeric
 #' @importFrom DatabaseConnector connect disconnect executeSql
 #' @importFrom SqlRender readSql render translate
 #'
-#' @return TRUE if the deletion is successful.
-#'
+#' @return TRUE if the deletion was successful; otherwise, an error is raised.
+#
 #' @export
-#'
 CohortGenerator_deleteCohortFromCohortTable  <- function(
     connectionDetails = NULL,
     connection = NULL,

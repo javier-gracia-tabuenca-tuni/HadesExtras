@@ -6,6 +6,7 @@
 #' @param connectionDetailsSettings A list of connection details settings to pass directly to DatabaseConnector::createConnectionDetails.
 #' @param tempEmulationSchema The temporary emulation schema (optional).
 #' @param usePooledConnection Logical indicating whether to use a pooled connection (default is FALSE).
+#' @param useBigrqueryUpload Logical indicating whether to use fast table upload for bigquery (default is FALSE)
 #' @param ... Additional arguments to be passed to the connection handler object.
 #'
 #' @importFrom checkmate assertList assertCharacter assertLogical

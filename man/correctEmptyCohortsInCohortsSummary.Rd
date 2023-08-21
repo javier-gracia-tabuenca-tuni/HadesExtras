@@ -6,6 +6,9 @@
 \usage{
 correctEmptyCohortsInCohortsSummary(cohortsSummary)
 }
+\arguments{
+\item{cohortsSummary}{tibble in cohortsSummary format}
+}
 \value{
 A tibble with cohort summary structure
 }

@@ -46,6 +46,8 @@ createEmptyCohortsSummary <- function() {
 
 #' Set NA to 0 in a cohortsSummary, and tibles to be empty
 #'
+#' @param cohortsSummary tibble in cohortsSummary format
+#'
 #' @return A tibble with cohort summary structure
 #' @importFrom tibble tibble
 #' @importFrom dplyr mutate if_else
@@ -77,6 +79,12 @@ correctEmptyCohortsInCohortsSummary <- function(cohortsSummary) {
       buildInfo = dplyr::if_else(is.na(cohortEntries), list(log$clone()), buildInfo),
       cohortEntries = dplyr::if_else(is.na(cohortEntries), 0L, as.integer(cohortEntries)),
       cohortSubjects = dplyr::if_else(is.na(cohortSubjects), 0L, as.integer(cohortSubjects))
+    ) |>
+    dplyr::select(
+      databaseName,  cohortId, cohortName,  shortName,
+      cohortEntries, cohortSubjects,
+      histogramCohortStartYear, histogramCohortEndYear, histogramBirthYear, sexCounts,
+      buildInfo
     )
 
   return(cohortsSummary)

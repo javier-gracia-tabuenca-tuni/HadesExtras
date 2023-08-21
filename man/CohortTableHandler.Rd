@@ -10,12 +10,20 @@ Inherits from CDMdbHandler.
 \section{Super class}{
 \code{\link[HadesExtras:CDMdbHandler]{HadesExtras::CDMdbHandler}} -> \code{CohortTableHandler}
 }
-\section{Public fields}{
-\if{html}{\out{<div class="r6-fields">}}
+\section{Active bindings}{
+\if{html}{\out{<div class="r6-active-bindings">}}
 \describe{
-\item{\code{cohortDatabaseSchema}}{Name of the cohort database schema.}
+\item{\code{cohortDatabaseSchema}}{Name of the cohort database schema (read-only).}
 
-\item{\code{cohortTableNames}}{Names of the cohort tables.}
+\item{\code{cohortTableNames}}{Names of the cohort tables (read-only).}
+
+\item{\code{incrementalFolder}}{Path to folder used by CohortGenerator in inclemetnal mode (read-only).}
+
+\item{\code{cohortDefinitionSet}}{Table in cohortDefinitionSet with the current cohorts in the cohortTable (read-only).}
+
+\item{\code{cohortGeneratorResults}}{Table with results from CohortGenerator_generateCohortSet with the current cohorts in the cohortTable(read-only).}
+
+\item{\code{cohortDemograpics}}{Table with results from CohortGenerator_getCohortDemograpics with the current cohorts in the cohortTable(read-only).}
 }
 \if{html}{\out{</div>}}
 }
@@ -29,10 +37,17 @@ Inherits from CDMdbHandler.
 \item \href{#method-CohortTableHandler-deleteCohorts}{\code{CohortTableHandler$deleteCohorts()}}
 \item \href{#method-CohortTableHandler-getCohortCounts}{\code{CohortTableHandler$getCohortCounts()}}
 \item \href{#method-CohortTableHandler-getCohortsSummary}{\code{CohortTableHandler$getCohortsSummary()}}
-\item \href{#method-CohortTableHandler-getCohortNames}{\code{CohortTableHandler$getCohortNames()}}
+\item \href{#method-CohortTableHandler-getCohortIdAndNames}{\code{CohortTableHandler$getCohortIdAndNames()}}
 \item \href{#method-CohortTableHandler-clone}{\code{CohortTableHandler$clone()}}
 }
 }
+\if{html}{\out{
+<details open><summary>Inherited methods</summary>
+<ul>
+<li><span class="pkg-link" data-pkg="HadesExtras" data-topic="CDMdbHandler" data-id="getConnectionStatus"><a href='../../HadesExtras/html/CDMdbHandler.html#method-CDMdbHandler-getConnectionStatus'><code>HadesExtras::CDMdbHandler$getConnectionStatus()</code></a></span></li>
+</ul>
+</details>
+}}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-CohortTableHandler-new"></a>}}
 \if{latex}{\out{\hypertarget{method-CohortTableHandler-new}{}}}
@@ -41,6 +56,7 @@ Initialize the CohortTableHandler object
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{CohortTableHandler$new(
   connectionHandler,
+  databaseName,
   cdmDatabaseSchema,
   vocabularyDatabaseSchema = cdmDatabaseSchema,
   cohortDatabaseSchema,
@@ -52,6 +68,8 @@ Initialize the CohortTableHandler object
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{connectionHandler}}{The connection handler object.}
+
+\item{\code{databaseName}}{A text id for the database the it connects to.}
 
 \item{\code{cdmDatabaseSchema}}{Name of the CDM database schema.}
 
@@ -93,8 +111,9 @@ insertOrUpdateCohorts
 \if{html}{\out{<a id="method-CohortTableHandler-insertOrUpdateCohorts"></a>}}
 \if{latex}{\out{\hypertarget{method-CohortTableHandler-insertOrUpdateCohorts}{}}}
 \subsection{Method \code{insertOrUpdateCohorts()}}{
-If there is no cohort with the same name it is added and generated with a new cohort_id, given cohort_id is saved as source_cohort_id,
-If there is a cohort with the same name, the current cohort_id is kept and source_cohort_id is updated
+If there is no cohort with the same cohortId it is added to the cohortDefinitionSet,
+If there is a cohort with the same cohortId, the cohort is updated in the cohortDefinitionSet
+CohortDefinitionSet is generated and demographics is updated for only the cohorts that have changed
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{CohortTableHandler$insertOrUpdateCohorts(cohortDefinitionSet)}\if{html}{\out{</div>}}
 }
@@ -155,16 +174,16 @@ Retrieves the summary of cohorts including cohort start and end year histograms 
 \subsection{Returns}{
 A tibble containing cohort summary.
 
-getCohortNames
+getCohortIdAndNames
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CohortTableHandler-getCohortNames"></a>}}
-\if{latex}{\out{\hypertarget{method-CohortTableHandler-getCohortNames}{}}}
-\subsection{Method \code{getCohortNames()}}{
+\if{html}{\out{<a id="method-CohortTableHandler-getCohortIdAndNames"></a>}}
+\if{latex}{\out{\hypertarget{method-CohortTableHandler-getCohortIdAndNames}{}}}
+\subsection{Method \code{getCohortIdAndNames()}}{
 Retrieves the cohort names.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{CohortTableHandler$getCohortNames()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{CohortTableHandler$getCohortIdAndNames()}\if{html}{\out{</div>}}
 }
 
 \subsection{Returns}{

@@ -4,8 +4,12 @@
 #' Class for handling cohort tables in a CDM database.
 #' Inherits from CDMdbHandler.
 #'
-#' @field cohortDatabaseSchema Name of the cohort database schema.
-#' @field cohortTableNames Names of the cohort tables.
+#' @field cohortDatabaseSchema Name of the cohort database schema (read-only).
+#' @field cohortTableNames Names of the cohort tables (read-only).
+#' @field incrementalFolder Path to folder used by CohortGenerator in inclemetnal mode (read-only).
+#' @field cohortDefinitionSet Table in cohortDefinitionSet with the current cohorts in the cohortTable (read-only).
+#' @field cohortGeneratorResults Table with results from CohortGenerator_generateCohortSet with the current cohorts in the cohortTable(read-only).
+#' @field cohortDemograpics Table with results from CohortGenerator_getCohortDemograpics with the current cohorts in the cohortTable(read-only).
 #'
 #' @importFrom R6 R6Class
 #' @importFrom checkmate assertClass assertString
@@ -44,6 +48,7 @@ CohortTableHandler <- R6::R6Class(
     #' Initialize the CohortTableHandler object
     #'
     #' @param connectionHandler The connection handler object.
+    #' @param databaseName A text id for the database the it connects to.
     #' @param cdmDatabaseSchema Name of the CDM database schema.
     #' @param vocabularyDatabaseSchema Name of the vocabulary database schema. Default is the same as the CDM database schema.
     #' @param cohortDatabaseSchema Name of the cohort database schema.
@@ -85,6 +90,8 @@ CohortTableHandler <- R6::R6Class(
     #' @description
     #' Closes the connection if active.
     finalize = function() {
+
+      print("deleted")
 
       CohortGenerator::dropCohortStatsTables(
         connection = self$connectionHandler$getConnection(),

@@ -4,9 +4,12 @@
 #' @description
 #' Class for managing log messages as a tibble.
 #'
+#' @field logTibble get as tibble
+#'
 #' @importFrom R6 R6Class
 #' @importFrom tibble tibble add_row
 #' @importFrom dplyr add_row
+#'
 #'
 #' @export
 #'
@@ -99,16 +102,7 @@ LogTibble <- R6::R6Class(
   ),
 
   active = list(
-    #' logTibble
-    #' @description
-    #' Returns the log tibble.
-    #'
-    #' @param x  (read-only) Ignored argument for compatibility
-    logTibble = function(x = NULL) {
-      if (!is.null(x)) {
-        stop("logTibble is read-only")
-      }
-      return(private$log)
+    logTibble = function(){ return(private$log)
     }
   )
 )

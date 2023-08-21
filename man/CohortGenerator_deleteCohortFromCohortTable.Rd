@@ -2,7 +2,7 @@
 % Please edit documentation in R/CohortGenerator.R
 \name{CohortGenerator_deleteCohortFromCohortTable}
 \alias{CohortGenerator_deleteCohortFromCohortTable}
-\title{Delete cohort from cohort table}
+\title{deleteCohortFromCohortTable}
 \usage{
 CohortGenerator_deleteCohortFromCohortTable(
   connectionDetails = NULL,
@@ -13,17 +13,19 @@ CohortGenerator_deleteCohortFromCohortTable(
 )
 }
 \arguments{
-\item{connectionDetails}{A list containing the necessary details to establish a database connection.}
+\item{connectionDetails}{A list of database connection details (optional).}
 
-\item{schema}{The name of the schema where the cohort table and cohort names table are located.}
+\item{connection}{A pre-established database connection (optional).}
 
-\item{cohort_table_name}{The name of the cohort table.}
+\item{cohortDatabaseSchema}{The schema name of the cohort database.}
 
-\item{cohort_names}{A character vector of cohort names to be deleted.}
+\item{cohortTableNames}{A list containing the name of the cohort table.}
+
+\item{cohortIds}{Numeric vector of cohort IDs to be deleted.}
 }
 \value{
-TRUE if the deletion is successful.
+TRUE if the deletion was successful; otherwise, an error is raised.
 }
 \description{
-This function deletes specified cohorts from the cohort table and cohort names table in the database.
+Deletes specified cohorts from a cohort table in a database.
 }

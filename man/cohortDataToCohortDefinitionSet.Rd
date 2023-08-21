@@ -5,29 +5,21 @@
 \title{cohortDataToCohortDefinitionSet}
 \usage{
 cohortDataToCohortDefinitionSet(
-  connectionDetails = NULL,
-  connection = NULL,
-  cdmDatabaseSchema,
-  cohortData
+  cohortData,
+  cohortIdOffset = 0L,
+  skipCohortDataCheck = FALSE
 )
 }
 \arguments{
-\item{connectionDetails}{The connection details to the database. If not connection is provided.}
+\item{cohortData}{The tibble in cohortData format.}
 
-\item{connection}{The database connection. If not connectionDetails is provided.}
+\item{cohortIdOffset}{An integer offset for cohort IDs (default is 0L).}
 
-\item{cdmDatabaseSchema}{The schema of the CDM database.}
-
-\item{cohortData}{The cohort data.}
+\item{skipCohortDataCheck}{Logical value indicating whether to skip cohort data validation (default is FALSE).}
 }
 \value{
-The cohortDefinitionSet with additional column
+A data frame of format cohortDefinitionSet.
 }
 \description{
-Generates a cohortDefinitionSet based on cohortData tibble.
-Finds the person_id based on the person_source_value in cohortData.
-If cohort_start_date and cohort_end_date is missing in cohortData,
-it sets the first observation_period_start_date and last observation_period_end_date respectvively. #'
-The cohortDefinitionSet includes a sql to copy from a temporary table with the pre-processed cohortData and
-a tibble with information on the pre-processing.
+Convert a cohortData tibble into a cohortDefinitionSet
 }

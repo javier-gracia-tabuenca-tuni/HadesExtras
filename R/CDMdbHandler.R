@@ -3,14 +3,15 @@
 #' @description
 #' Class for handling database connection and schema information for a CDM database
 #'
-#' @field connectionHandler           ConnectionHandler object for managing the database connection
-#' @field vocabularyDatabaseSchema    Name of the vocabulary database schema
-#' @field cdmDatabaseSchema           Name of the CDM database schema
-#' @field connectionStatusLog            Log tibble object for storing connection status information
-#' @field vocabularyInfo              Data frame containing information about the vocabulary database
-#' @field CDMInfo                     Data frame containing information about the CDM database
-#' @field getTblVocabularySchema               List of functions that create dbplyr table for the vocabulary tables
-#' @field getTblCDMSchema                      List of functions that create dbplyr table for the CDM tables
+#' @field databaseName           A text id for the database the it connects to (read-only).
+#' @field connectionHandler           ConnectionHandler object for managing the database connection (read-only).
+#' @field vocabularyDatabaseSchema    Name of the vocabulary database schema (read-only).
+#' @field cdmDatabaseSchema           Name of the CDM database schema (read-only).
+#' @field connectionStatusLog            Log tibble object for storing connection status information (read-only).
+#' @field vocabularyInfo              Data frame containing information about the vocabulary database (read-only).
+#' @field CDMInfo                     Data frame containing information about the CDM database (read-only).
+#' @field getTblVocabularySchema               List of functions that create dbplyr table for the vocabulary tables (read-only).
+#' @field getTblCDMSchema                      List of functions that create dbplyr table for the CDM tables (read-only).
 #'
 #' @importFrom R6 R6Class
 #' @importFrom checkmate assertClass assertString
@@ -51,6 +52,7 @@ CDMdbHandler <- R6::R6Class(
   ),
   public = list(
     #'
+    #' @param databaseName           A text id for the database the it connects to
     #' @param connectionHandler             A ConnectionHandler object
     #' @param cdmDatabaseSchema             Name of the CDM database schema
     #' @param vocabularyDatabaseSchema      (Optional) Name of the vocabulary database schema (default is cdmDatabaseSchema)
@@ -278,7 +280,7 @@ createCDMdbHandlerFromList <- function(
   ) {
 
   config |> checkmate::assertList()
-  config |> names() |> checkmate::assertSubset(c("databaseName", "connection", "cdm" ))
+  config |> names() |> checkmate::assertNames(must.include = c("databaseName", "connection", "cdm" ))
 
   connectionHandler <- ResultModelManager_createConnectionHandler(
     connectionDetailsSettings = config$connection$connectionDetailsSettings,

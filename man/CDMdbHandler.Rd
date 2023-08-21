@@ -6,24 +6,26 @@
 \description{
 Class for handling database connection and schema information for a CDM database
 }
-\section{Public fields}{
-\if{html}{\out{<div class="r6-fields">}}
+\section{Active bindings}{
+\if{html}{\out{<div class="r6-active-bindings">}}
 \describe{
-\item{\code{connectionHandler}}{ConnectionHandler object for managing the database connection}
+\item{\code{databaseName}}{A text id for the database the it connects to (read-only).}
 
-\item{\code{vocabularyDatabaseSchema}}{Name of the vocabulary database schema}
+\item{\code{connectionHandler}}{ConnectionHandler object for managing the database connection (read-only).}
 
-\item{\code{cdmDatabaseSchema}}{Name of the CDM database schema}
+\item{\code{vocabularyDatabaseSchema}}{Name of the vocabulary database schema (read-only).}
 
-\item{\code{connectionStatusLog}}{Log tibble object for storing connection status information}
+\item{\code{cdmDatabaseSchema}}{Name of the CDM database schema (read-only).}
 
-\item{\code{vocabularyInfo}}{Data frame containing information about the vocabulary database}
+\item{\code{connectionStatusLog}}{Log tibble object for storing connection status information (read-only).}
 
-\item{\code{CDMInfo}}{Data frame containing information about the CDM database}
+\item{\code{vocabularyInfo}}{Data frame containing information about the vocabulary database (read-only).}
 
-\item{\code{getTblVocabularySchema}}{List of functions that create dbplyr table for the vocabulary tables}
+\item{\code{CDMInfo}}{Data frame containing information about the CDM database (read-only).}
 
-\item{\code{getTblCDMSchema}}{List of functions that create dbplyr table for the CDM tables}
+\item{\code{getTblVocabularySchema}}{List of functions that create dbplyr table for the vocabulary tables (read-only).}
+
+\item{\code{getTblCDMSchema}}{List of functions that create dbplyr table for the CDM tables (read-only).}
 }
 \if{html}{\out{</div>}}
 }
@@ -33,6 +35,7 @@ Class for handling database connection and schema information for a CDM database
 \item \href{#method-CDMdbHandler-new}{\code{CDMdbHandler$new()}}
 \item \href{#method-CDMdbHandler-finalize}{\code{CDMdbHandler$finalize()}}
 \item \href{#method-CDMdbHandler-loadConnection}{\code{CDMdbHandler$loadConnection()}}
+\item \href{#method-CDMdbHandler-getConnectionStatus}{\code{CDMdbHandler$getConnectionStatus()}}
 \item \href{#method-CDMdbHandler-clone}{\code{CDMdbHandler$clone()}}
 }
 }
@@ -42,6 +45,7 @@ Class for handling database connection and schema information for a CDM database
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{CDMdbHandler$new(
+  databaseName,
   connectionHandler,
   cdmDatabaseSchema,
   vocabularyDatabaseSchema = cdmDatabaseSchema
@@ -51,6 +55,8 @@ Class for handling database connection and schema information for a CDM database
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{databaseName}}{A text id for the database the it connects to}
+
 \item{\code{connectionHandler}}{A ConnectionHandler object}
 
 \item{\code{cdmDatabaseSchema}}{Name of the CDM database schema}
@@ -77,8 +83,19 @@ Reload connection
 \if{latex}{\out{\hypertarget{method-CDMdbHandler-loadConnection}{}}}
 \subsection{Method \code{loadConnection()}}{
 Updates the connection status by checking the database connection, vocabulary database schema, and CDM database schema.
+Get connection status
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{CDMdbHandler$loadConnection()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CDMdbHandler-getConnectionStatus"></a>}}
+\if{latex}{\out{\hypertarget{method-CDMdbHandler-getConnectionStatus}{}}}
+\subsection{Method \code{getConnectionStatus()}}{
+gets tibble with database name and connection status.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{CDMdbHandler$getConnectionStatus()}\if{html}{\out{</div>}}
 }
 
 }

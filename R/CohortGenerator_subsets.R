@@ -164,9 +164,10 @@ CohortGenerator_MatchingSubsetOperator <- R6::R6Class(
 #'
 #' @param name  optional name of operator
 #' @param matchToCohortId integer - cohort ids to match to
+#' @param matchRatio matching ratio
 #' @param matchSex match to target sex
 #' @param matchBirthYear match to target birth year
-#' @param matchRatio matching ratio
+#' @param matchCohortStartDateWithInDuration cohort_start_date of the matching subject must be within the duration of the target cohort
 #' @param newCohortStartDate change cohort start date to the matched person
 #' @param newCohortEndDate  change cohort end date to the matched person
 #'

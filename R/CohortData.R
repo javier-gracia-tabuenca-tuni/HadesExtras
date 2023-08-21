@@ -132,7 +132,24 @@ assertCohortData  <- function(tibble) {
 }
 
 
-
+#' cohortDataToCohortDefinitionSet
+#'
+#' Convert a cohortData tibble into a cohortDefinitionSet
+#'
+#' @param cohortData The tibble in cohortData format.
+#' @param cohortIdOffset An integer offset for cohort IDs (default is 0L).
+#' @param skipCohortDataCheck Logical value indicating whether to skip cohort data validation (default is FALSE).
+#'
+#' @importFrom checkmate assertInt assertLogical
+#' @importFrom purrr map_chr map2_chr
+#' @importFrom dplyr row_number transmute
+#' @importFrom tidyr nest
+#' @importFrom SqlRender readSql render
+#' @importFrom digest digest
+#'
+#' @return A data frame of format cohortDefinitionSet.
+#'
+#' @export
 cohortDataToCohortDefinitionSet <- function(
     cohortData,
     cohortIdOffset = 0L,

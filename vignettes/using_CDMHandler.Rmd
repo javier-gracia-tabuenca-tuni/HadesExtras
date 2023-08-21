@@ -28,6 +28,7 @@ We need the following configuration. We write this in yaml format for clarity.
 
 ```{r}
 config_yaml <- "
+  databaseName: eunomia1
   connection:
     connectionDetailsSettings:
         dbms: eunomia

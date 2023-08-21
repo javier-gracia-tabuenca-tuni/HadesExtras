@@ -17,6 +17,8 @@ ResultModelManager_createConnectionHandler(
 
 \item{tempEmulationSchema}{The temporary emulation schema (optional).}
 
+\item{useBigrqueryUpload}{Logical indicating whether to use fast table upload for bigquery (default is FALSE)}
+
 \item{usePooledConnection}{Logical indicating whether to use a pooled connection (default is FALSE).}
 
 \item{...}{Additional arguments to be passed to the connection handler object.}
