@@ -104,7 +104,7 @@ CDMdbHandler <- R6::R6Class(
       if (errorMessage != "" | !private$.connectionHandler$dbIsValid()) {
         connectionStatusLog$ERROR("Check database connection", errorMessage)
       } else {
-        connectionStatusLog$INFO("Check database connection", "Valid connection")
+        connectionStatusLog$SUCCESS("Check database connection", "Valid connection")
       }
 
       # Check can create temp tables
@@ -124,7 +124,7 @@ CDMdbHandler <- R6::R6Class(
       if (errorMessage != "") {
         connectionStatusLog$WARNING("Check temp table creation", errorMessage)
       } else {
-        connectionStatusLog$INFO("Check temp table creation", "can create temp tables")
+        connectionStatusLog$SUCCESS("Check temp table creation", "can create temp tables")
       }
 
       # Check vocabularyDatabaseSchema and populates getTblVocabularySchema
@@ -169,7 +169,7 @@ CDMdbHandler <- R6::R6Class(
       if (errorMessage != "") {
         connectionStatusLog$ERROR("vocabularyDatabaseSchema connection", errorMessage)
       } else {
-        connectionStatusLog$INFO(
+        connectionStatusLog$SUCCESS(
           "vocabularyDatabaseSchema connection",
           "Connected to vocabulary:", vocabularyInfo$vocabulary_name,
           "Version: ", vocabularyInfo$vocabulary_version
@@ -234,7 +234,7 @@ CDMdbHandler <- R6::R6Class(
       if (errorMessage != "") {
         connectionStatusLog$ERROR("cdmDatabaseSchema connection", errorMessage)
       } else {
-        connectionStatusLog$INFO(
+        connectionStatusLog$SUCCESS(
           "cdmDatabaseSchema connection",
           "Connected to cdm:", CDMInfo$cdm_source_name, "Version: ", CDMInfo$ cdm_version
         )

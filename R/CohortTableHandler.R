@@ -127,7 +127,7 @@ CohortTableHandler <- R6::R6Class(
       if (errorMessage != "") {
         private$.connectionStatusLog$ERROR("Create cohort tables", errorMessage)
       } else {
-        private$.connectionStatusLog$INFO("Create cohort tables", "Created cohort tables")
+        private$.connectionStatusLog$SUCCESS("Create cohort tables", "Created cohort tables")
       }
     },
     #'
