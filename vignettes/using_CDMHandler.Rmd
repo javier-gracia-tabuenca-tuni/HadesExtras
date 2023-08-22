@@ -80,12 +80,12 @@ CDMdb <- createCDMdbHandlerFromList(config)
 First thing to do is to check the status of the connection. 
 `CDMdb$connectionStatusLog` not only shows if the connection is correct, but also if the `tempEmulationSchema` works, and all the CDM and Vocabulary tables are available in the database.  
 ```{r}
-CDMdb$getConnectionStatus()
+CDMdb$connectionStatusLog
 ```
 
 Function `reactable_connectionStatus` creates an interactive table with this information.
 ```{r}
-CDMdb$getConnectionStatus() |> 
+CDMdb$connectionStatusLog |> 
   reactable_connectionStatus()
 ```
 

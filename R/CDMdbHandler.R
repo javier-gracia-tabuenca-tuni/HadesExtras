@@ -42,7 +42,9 @@ CDMdbHandler <- R6::R6Class(
     connectionHandler = function(){return(private$.connectionHandler)},
     vocabularyDatabaseSchema = function(){return(private$.vocabularyDatabaseSchema)},
     cdmDatabaseSchema = function(){return(private$.cdmDatabaseSchema)},
-    connectionStatusLog = function(){return(private$.connectionStatusLog$logTibble)},
+    connectionStatusLog = function(){return(private$.connectionStatusLog$logTibble |>
+                                              dplyr::mutate(databaseName = private$.databaseName) |>
+                                              dplyr::relocate(databaseName, .before = 1))},
     #
     vocabularyInfo = function(){return(private$.vocabularyInfo)},
     CDMInfo = function(){return(private$.CDMInfo)},
@@ -245,16 +247,6 @@ CDMdbHandler <- R6::R6Class(
       private$.connectionStatusLog <- connectionStatusLog
       private$.getTblVocabularySchema <- getTblVocabularySchema
       private$.getTblCDMSchema <- getTblCDMSchema
-    },
-
-    #' Get connection status
-    #' @description
-    #' gets tibble with database name and connection status.
-    getConnectionStatus = function() {
-      private$.connectionStatusLog$logTibble |>
-        dplyr::mutate(databaseName = private$.databaseName) |>
-        dplyr::relocate(databaseName, .before = 1)
-
     }
   )
 )
