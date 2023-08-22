@@ -18,8 +18,8 @@ test_that("createConnectionHandler works", {
 
   CDMdb |> checkmate::expect_class("CDMdbHandler")
   CDMdb$databaseName |> checkmate::assertString()
-  CDMdb$connectionStatusLog |> checkmate::expect_class("LogTibble")
-  CDMdb$connectionStatusLog$logTibble |> dplyr::filter(type != "INFO") |> nrow() |>  expect_equal(0)
+  CDMdb$connectionStatusLog |> checkmate::expect_tibble()
+  CDMdb$connectionStatusLog |> dplyr::filter(type != "SUCCESS") |> nrow() |>  expect_equal(0)
   CDMdb$getTblCDMSchema$person() |> checkmate::expect_class("tbl_dbi")
   CDMdb$getTblVocabularySchema$vocabulary() |> checkmate::expect_class("tbl_dbi")
 

@@ -262,7 +262,7 @@ rectable_cohortsSummary <- function(
 #'
 .tippyText <- function(text, tooltip){
      tippy::tippy(text = text,
-                 tooltip = paste0("<div style='text-align: left;'>",tooltip,"<div>"),
+                 tooltip = paste0("<div style='text-align: left; font-size:16px;'>",tooltip,"<div>"),
                  allowHTML = TRUE,
                  theme = "light",
                  arrow = TRUE)

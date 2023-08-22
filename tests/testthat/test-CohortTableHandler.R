@@ -6,8 +6,8 @@ test_that("CohortTableHandler creates object with correct params", {
   on.exit({rm(cohortTableHandler);gc()})
 
   cohortTableHandler |> checkmate::expect_class("CohortTableHandler")
-  cohortTableHandler$connectionStatusLog |> checkmate::expect_class("LogTibble")
-  cohortTableHandler$connectionStatusLog$logTibble |> dplyr::filter(type != "INFO") |> nrow() |>  expect_equal(0)
+  cohortTableHandler$connectionStatusLog |> checkmate::expect_tibble()
+  cohortTableHandler$connectionStatusLog |> dplyr::filter(type != "SUCCESS") |> nrow() |>  expect_equal(0)
 
 })
 
@@ -72,6 +72,38 @@ test_that("CohortTableHandler$insertOrUpdateCohorts warns when cohortId exists a
   cohortCounts$cohortId |> expect_equal(10)
   cohortCounts$cohortEntries |> expect_equal(1)
   cohortCounts$cohortSubjects |> expect_equal(1)
+
+})
+
+test_that("CohortTableHandler$insertOrUpdateCohorts keeps data when update an unchanged cohort", {
+
+  cohortTableHandler <- helper_createNewCohortTableHandler()
+  on.exit({rm(cohortTableHandler);gc()})
+
+  cohortDefinitionSet <- tibble::tibble(
+    cohortId = 10,
+    cohortName = "cohort1",
+    sql = "DELETE FROM @target_database_schema.@target_cohort_table where cohort_definition_id = @target_cohort_id;
+    INSERT INTO @target_database_schema.@target_cohort_table (cohort_definition_id, subject_id, cohort_start_date, cohort_end_date)
+    VALUES (@target_cohort_id, 1, CAST('20000101' AS DATE), CAST('20220101' AS DATE)  );",
+    json = ""
+  )
+
+  cohortTableHandler$insertOrUpdateCohorts(cohortDefinitionSet)
+  cohortGeneratorResults <- cohortTableHandler$cohortGeneratorResults
+
+  cohortGeneratorResults |> checkmate::expect_tibble(nrows = 1)
+  cohortGeneratorResults$cohortId |> expect_equal(10)
+  cohortGeneratorResults$generationStatus |> expect_equal("COMPLETE")
+
+
+  expect_warning( cohortTableHandler$insertOrUpdateCohorts(cohortDefinitionSet) )
+
+  cohortGeneratorResults <- cohortTableHandler$cohortGeneratorResults
+
+  cohortGeneratorResults |> checkmate::expect_tibble(nrows = 1)
+  cohortGeneratorResults$cohortId |> expect_equal(10)
+  cohortGeneratorResults$generationStatus |> expect_equal("COMPLETE")
 
 })
 

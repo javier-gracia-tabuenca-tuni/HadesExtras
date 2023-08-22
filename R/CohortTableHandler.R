@@ -176,23 +176,33 @@ CohortTableHandler <- R6::R6Class(
       )|>
         dplyr::arrange(cohortId)
 
-      # Update cohortDemograpics
-      haveChangeCohortIds <- cohortGeneratorResults |>
-        dplyr::filter(generationStatus == "COMPLETE") |>
-        dplyr::pull(cohortId)
+      # keep only these that have changed
+      cohortGeneratorResultsToUpdate <- cohortGeneratorResults |>
+        dplyr::filter(generationStatus == "COMPLETE")
 
+      # Update cohortDemograpics
       cohortDemograpicsToUpdate <- tibble::tibble(cohortId=0, .rows = 0)
-      if(length(haveChangeCohortIds)!=0){
+      if(length(cohortGeneratorResultsToUpdate$cohortId)!=0){
         cohortDemograpicsToUpdate <- CohortGenerator_getCohortDemograpics(
           connection= self$connectionHandler$getConnection(),
           cdmDatabaseSchema = self$cdmDatabaseSchema,
           vocabularyDatabaseSchema = self$vocabularyDatabaseSchema,
           cohortDatabaseSchema = self$cohortDatabaseSchema,
           cohortTable = self$cohortTableNames$cohortTable,
-          cohortIds = haveChangeCohortIds
+          cohortIds = cohortGeneratorResultsToUpdate$cohortId
         )
       }
-      #
+
+      # update changes
+      #browser()
+      # update
+      cohortGeneratorResults <- dplyr::bind_rows(
+        private$.cohortGeneratorResults |> dplyr::filter(!(cohortId %in% cohortGeneratorResultsToUpdate$cohortId)),
+        cohortGeneratorResultsToUpdate
+      ) |>
+        dplyr::arrange(cohortId)
+
+      # update cohortDemograpics
       cohortDemograpics <- dplyr::bind_rows(
         private$.cohortDemograpics |> dplyr::filter(!(cohortId %in% cohortDemograpicsToUpdate$cohortId)),
         cohortDemograpicsToUpdate

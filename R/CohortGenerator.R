@@ -27,6 +27,7 @@
 #' @importFrom dplyr mutate filter left_join if_else select arrange bind_rows
 #' @importFrom tidyr nest
 #' @importFrom purrr map map2
+#' @importFrom lubridate as_datetime
 #'
 #' @export
 
@@ -183,6 +184,8 @@ CohortGenerator_generateCohortSet <- function(
   cohortGeneratorResults <- results |>
     dplyr::select(-cohortName) |>
     dplyr::mutate(
+      startTime = lubridate::as_datetime(startTime),
+      endTime = lubridate::as_datetime(endTime),
       buildInfo = map(.x = cohortId, .f = ~{LogTibble$new()})
     )
   #
