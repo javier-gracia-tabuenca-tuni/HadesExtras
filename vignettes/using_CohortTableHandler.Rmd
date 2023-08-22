@@ -65,7 +65,7 @@ cohortTableHandler <- createCohortTableHandlerFromList(config)
 In addition to the checks performed by `CDMHandled`, `cohortTableHandler` includes a check on the creation of the `cohort` table. 
 
 ```{r}
-cohortTableHandler$getConnectionStatus() |> 
+cohortTableHandler$connectionStatusLog |> 
   reactable_connectionStatus()
 ```
 
