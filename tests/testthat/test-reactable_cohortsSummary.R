@@ -2,7 +2,7 @@
 
 test_that("rectable_cohortsSummary works", {
 
-  cohortTableHandler <- helper_getNewCohortTableHandler()
+  cohortTableHandler <- helper_createNewCohortTableHandler()
   on.exit({rm(cohortTableHandler);gc()})
 
   # cohorts from eunomia

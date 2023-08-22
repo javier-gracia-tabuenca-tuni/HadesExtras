@@ -91,8 +91,6 @@ CohortTableHandler <- R6::R6Class(
     #' Closes the connection if active.
     finalize = function() {
 
-      print("deleted")
-
       CohortGenerator::dropCohortStatsTables(
         connection = self$connectionHandler$getConnection(),
         cohortDatabaseSchema = self$cohortDatabaseSchema,
@@ -293,9 +291,9 @@ CohortTableHandler <- R6::R6Class(
 
 #' createCohortTableHandlerFromList
 #'
-#' A function to create a CohortTableHandler object from a list of configuration settings.
+#' A function to create a CohortTableHandler object from a list of cohortTableHandlerConfiguration settings.
 #'
-#' @param config A list containing configuration settings for the CohortTableHandler.
+#' @param cohortTableHandlerConfig A list containing cohortTableHandlerConfiguration settings for the CohortTableHandler.
 #'   - databaseName: The name of the database.
 #'   - connection: A list of connection details settings.
 #'   - cdm: A list of CDM database schema settings.
@@ -307,24 +305,24 @@ CohortTableHandler <- R6::R6Class(
 #'
 #' @export
 createCohortTableHandlerFromList <- function(
-    config
+    cohortTableHandlerConfig
 ) {
 
-  config |> checkmate::assertList()
-  config |> names() |> checkmate::assertSubset(c("databaseName", "connection", "cdm", "cohortTable" ))
+  cohortTableHandlerConfig |> checkmate::assertList()
+  cohortTableHandlerConfig |> names() |> checkmate::assertSubset(c("databaseName", "connection", "cdm", "cohortTable" ))
 
   connectionHandler <- ResultModelManager_createConnectionHandler(
-    connectionDetailsSettings = config$connection$connectionDetailsSettings,
-    tempEmulationSchema = config$connection$tempEmulationSchema,
-    useBigrqueryUpload = config$connection$useBigrqueryUpload
+    connectionDetailsSettings = cohortTableHandlerConfig$connection$connectionDetailsSettings,
+    tempEmulationSchema = cohortTableHandlerConfig$connection$tempEmulationSchema,
+    useBigrqueryUpload = cohortTableHandlerConfig$connection$useBigrqueryUpload
   )
   cohortTableHandler <- CohortTableHandler$new(
     connectionHandler = connectionHandler,
-    databaseName = config$databaseName,
-    cdmDatabaseSchema = config$cdm$cdmDatabaseSchema,
-    vocabularyDatabaseSchema = config$cdm$vocabularyDatabaseSchema,
-    cohortDatabaseSchema = config$cohortTable$cohortDatabaseSchema,
-    cohortTableName = config$cohortTable$cohortTableName
+    databaseName = cohortTableHandlerConfig$databaseName,
+    cdmDatabaseSchema = cohortTableHandlerConfig$cdm$cdmDatabaseSchema,
+    vocabularyDatabaseSchema = cohortTableHandlerConfig$cdm$vocabularyDatabaseSchema,
+    cohortDatabaseSchema = cohortTableHandlerConfig$cohortTable$cohortDatabaseSchema,
+    cohortTableName = cohortTableHandlerConfig$cohortTable$cohortTableName
   )
 
   return(cohortTableHandler)

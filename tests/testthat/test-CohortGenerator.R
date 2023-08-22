@@ -4,7 +4,7 @@
 #
 test_that("CohortGenerator_deleteCohortFromCohortTable deletes a cohort", {
 
-  connection <- helper_getConnection()
+  connection <- helper_createNewConnection()
 
   CohortGenerator::createCohortTables(
     connection = connection,
@@ -57,7 +57,7 @@ test_that("CohortGenerator_deleteCohortFromCohortTable deletes a cohort", {
 #
 test_that("cohortDataToCohortDefinitionSet works", {
   # get test settings
-  connection <- helper_getConnection()
+  connection <- helper_createNewConnection()
   CohortGenerator::createCohortTables(
     connection = connection,
     cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema
@@ -104,7 +104,7 @@ test_that("cohortDataToCohortDefinitionSet works", {
 
 test_that("cohortDataToCohortDefinitionSet reports missing source person id", {
   # get test settings
-  connection <- helper_getConnection()
+  connection <- helper_createNewConnection()
   CohortGenerator::createCohortTables(
     connection = connection,
     cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema
@@ -151,7 +151,7 @@ test_that("cohortDataToCohortDefinitionSet reports missing source person id", {
 
 test_that("cohortDataToCohortDefinitionSet reports missing cohort_start_date", {
   # get test settings
-  connection <- helper_getConnection()
+  connection <- helper_createNewConnection()
   CohortGenerator::createCohortTables(
     connection = connection,
     cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema
@@ -199,7 +199,7 @@ test_that("cohortDataToCohortDefinitionSet reports missing cohort_start_date", {
 
 test_that("cohortDataToCohortDefinitionSet reports missing cohort_end_date", {
   # get test settings
-  connection <- helper_getConnection()
+  connection <- helper_createNewConnection()
   CohortGenerator::createCohortTables(
     connection = connection,
     cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema
@@ -247,7 +247,7 @@ test_that("cohortDataToCohortDefinitionSet reports missing cohort_end_date", {
 
 test_that("cohortDataToCohortDefinitionSet also works from imported files", {
   # get test settings
-  connection <- helper_getConnection()
+  connection <- helper_createNewConnection()
   CohortGenerator::createCohortTables(
     connection = connection,
     cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema
@@ -315,7 +315,7 @@ test_that("cohortDataToCohortDefinitionSet also works from imported files", {
 
 test_that("cohortDataToCohortDefinitionSet incremental mode do not create the tmp cohortData", {
   # get test settings
-  connection <- helper_getConnection()
+  connection <- helper_createNewConnection()
   CohortGenerator::createCohortTables(
     connection = connection,
     cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema

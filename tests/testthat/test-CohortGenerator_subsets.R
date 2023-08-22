@@ -35,7 +35,7 @@ test_that("Matching subset naming and instantitation", {
 
 test_that("Matching Subset works", {
 
-  connection <- helper_getConnection()
+  connection <- helper_createNewConnection()
   #on.exit({DatabaseConnector::dropEmulatedTempTables(connection); DatabaseConnector::disconnect(connection)})
 
   CohortGenerator::createCohortTables(
@@ -112,7 +112,7 @@ test_that("Matching Subset works for different parameters", {
 
   testthat::skip_if(testSelectedConfiguration$connection$connectionDetailsSettings$dbms!="eunomia")
 
-  connection <- helper_getConnection()
+  connection <- helper_createNewConnection()
   #on.exit({DatabaseConnector::dropEmulatedTempTables(connection); DatabaseConnector::disconnect(connection)})
 
   CohortGenerator::createCohortTables(

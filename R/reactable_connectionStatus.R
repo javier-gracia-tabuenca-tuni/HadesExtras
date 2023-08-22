@@ -21,6 +21,9 @@ reactable_connectionStatus <- function(
     )
     ) {
 
+  connectionStatus |> checkmate::assertTibble()
+  connectionStatus |> names() |>  checkmate::assertNames(must.include = c("databaseName", "type", "step", "message"))
+
   if(nrow(connectionStatus)==0){
     return(connectionStatus |>
              reactable::reactable())

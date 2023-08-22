@@ -42,7 +42,7 @@ CDMdbHandler <- R6::R6Class(
     connectionHandler = function(){return(private$.connectionHandler)},
     vocabularyDatabaseSchema = function(){return(private$.vocabularyDatabaseSchema)},
     cdmDatabaseSchema = function(){return(private$.cdmDatabaseSchema)},
-    connectionStatusLog = function(){return(private$.connectionStatusLog)},
+    connectionStatusLog = function(){return(private$.connectionStatusLog$logTibble)},
     #
     vocabularyInfo = function(){return(private$.vocabularyInfo)},
     CDMInfo = function(){return(private$.CDMInfo)},
