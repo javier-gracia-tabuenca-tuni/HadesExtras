@@ -145,9 +145,10 @@ rectable_cohortsSummary <- function(
 #'
 #' @return An Apex chart object.
 .render_apex_plot <- function(
-    data,
-    colorTimeHist = "#00BFFF"
+    data
 ) {
+  colorTimeHist = "#00BFFF"
+
   data |>
     apexcharter::apex(apexcharter::aes(year, n ), type = "column", height = 50) |>
     apexcharter::ax_chart(sparkline = list(enabled = TRUE)) |>
@@ -243,8 +244,8 @@ rectable_cohortsSummary <- function(
 
   return(paste0(
     "Males: ", n_male, " (", p_male, "%)<br>",
-    "Unknow: ", n_female, " (", p_female, "%)<br>",
-    "Females: ", n_na, " (", p_na, "%)<br>"
+    "Unknow: ", n_na, " (", p_na, "%)<br>",
+    "Female: ", n_female, " (", p_female, "%)<br>"
     ))
 }
 
@@ -302,7 +303,6 @@ rectable_cohortsSummary <- function(
     ) |>
     dplyr::pull(str) |>
     paste(collapse = ", ")
-
 
 }
 

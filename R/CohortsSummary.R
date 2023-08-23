@@ -55,6 +55,10 @@ createEmptyCohortsSummary <- function() {
 #'
 correctEmptyCohortsInCohortsSummary <- function(cohortsSummary) {
 
+  if(nrow(cohortsSummary)==0){
+    return(createEmptyCohortsSummary())
+  }
+
   emptyHistogram = list(
     tibble::tibble(
       year = as.integer(NA),

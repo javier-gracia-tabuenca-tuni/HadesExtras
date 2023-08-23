@@ -22,7 +22,13 @@ devtools::load_all(".")
 #options("DEBUG_DATABASECONNECTOR_DBPLYR" = FALSE)
 ```
 
+# Intro
+
+The CohortTableHandler is an extension of `CDMHandled` (see vignette) to include the a `cohort` table and the functions to work with this table. 
+
 # Configuration 
+
+In addition to the configuration for `CDMHandled`, we also need the configuration indicating the location of the cohort table. 
 
 We need the following configuration. We write this in yaml format for clarity. 
 
@@ -55,8 +61,6 @@ config <- configurations[[configurationName]]
 
 # Create CohortTableHandler
 
-The CohortTableHandler is an extension of CDMHandled (see vignette) to include the a `cohort` table and the functions to work with this table. 
-
 As in `CDMHandled`, to create a `CohortTableHandles`, for convenience `createCohortTableHandlerFromList` can be used. 
 ```{r}
 cohortTableHandler <- createCohortTableHandlerFromList(config)
@@ -71,6 +75,52 @@ cohortTableHandler$connectionStatusLog |>
 
 
 # Add cohors to `cohort` table 
+
+
+To add cohort to the `cohortTableHandler` object we need a `cohortDefinitionSet` table (this table is defined in [CohortGenerator](https://ohdsi.github.io/CohortGenerator/articles/GeneratingCohorts.html#downloading-cohorts-from-atlas)). 
+
+`cohortDefinitionSet` can be created from
+[Atlas](https://ohdsi.github.io/CohortGenerator/articles/GeneratingCohorts.html#downloading-cohorts-from-atlas) 
+cohort definitions, or from 
+[study pacakages](https://ohdsi.github.io/CohortGenerator/reference/getCohortDefinitionSet.html). 
+
+Additionally, `HadesExtras` includes a way to produce `cohortDefinitionSet` based on a list of local person ids (OMOP table person field person_source_value). 
+
+## Add cohorts from Atlas
+
+Get `cohortDefinitionSet` form 3 cohort definitions in Atlas demo. 
+```{r}
+# webAPI url for the Atlas demo
+baseUrl <- "https://api.ohdsi.org/WebAPI"
+# A list of cohort IDs for use in this vignette
+cohortIds <- c(1778211, 1778212, 1778213)
+# Get the SQL/JSON for the cohorts
+cohortDefinitionSet <- ROhdsiWebApi::exportCohortDefinitionSet(
+  baseUrl = baseUrl,
+  cohortIds = cohortIds
+)
+```
+
+Build cohorts 
+```{r}
+cohortTableHandler$insertOrUpdateCohorts(cohortDefinitionSet)
+```
+
+Check cohort counts 
+```{r}
+cohortTableHandler$getCohortCounts()
+```
+
+```{r}
+cohortsSummary <- cohortTableHandler$getCohortsSummary()
+```
+
+```{r}
+rectable_cohortsSummary(cohortsSummary)
+```
+
+
+## Add cohorts from cohortData file
 
 Create tibble of `cohortData` format. See the documentation for the correct format. 
 
@@ -120,11 +170,6 @@ Copy `cohortDefinitionSet` to `cohort` table
 
 ```{r}
 cohortTableHandler$insertOrUpdateCohorts(cohortDefinitionSet)
-```
-
-Check it is correct
-```{r}
-cohortTableHandler$getCohortCounts()
 ```
 
 

@@ -74,7 +74,7 @@ CohortTableHandler <- R6::R6Class(
         .rows = 0 )
 
       private$.cohortGeneratorResults <- tibble::tibble(cohortId=0, buildInfo=list(), .rows = 0)
-      private$.cohortDemograpics <- tibble::tibble(cohortId=0, .rows = 0)
+      private$.cohortDemograpics <- tibble::tibble(cohortId=0, cohortEntries=0L, cohortSubjects=0L, .rows = 0)
 
       #self$loadConnection()
       # super$initialize is calling self$loadConnection(), self$loadConnection() is calling super$loadConnection()
