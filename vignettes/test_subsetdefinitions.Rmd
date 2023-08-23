@@ -97,7 +97,7 @@ cohortDefinitionSet <- CohortGenerator::getCohortDefinitionSet(
 # Match to sex and bday, match ratio 10
   subsetDef <- CohortGenerator::createCohortSubsetDefinition(
     name = "",
-    definitionId = 30,
+    definitionId = 20,
     subsetOperators = list(
       createMatchingSubset(
         matchToCohortId = 10,
@@ -123,7 +123,7 @@ cohortDefinitionSetWithSubsetDef |>  tibble::as_tibble() |> dplyr::select(-sql, 
 
 Build cohorts 
 ```{r}
-cohortTableHandler$insertOrUpdateCohorts(cohortDefinitionSetWithSubsetDef)
+cohortTableHandler$insertOrUpdateCohorts(cohortDefinitionSetWithSubsetDef |> dplyr::filter(subsetDefinitionId==20))
 ```
 
 ```{r}
