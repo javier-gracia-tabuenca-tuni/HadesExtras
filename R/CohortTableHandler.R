@@ -71,6 +71,7 @@ CohortTableHandler <- R6::R6Class(
 
       private$.cohortDefinitionSet <- tibble::tibble(
         cohortId=0L,   cohortName="", sql="",        json="",
+        subsetParent=0, isSubset=TRUE, subsetDefinitionId=0,
         .rows = 0 )
 
       private$.cohortGeneratorResults <- tibble::tibble(cohortId=0, buildInfo=list(), .rows = 0)
@@ -292,7 +293,7 @@ CohortTableHandler <- R6::R6Class(
     #'
     #' @return A vector with the name of the cohorts
     getCohortIdAndNames  = function(){
-      return(private$.cohortDefinitionSet |> dplyr::select(cohortId, cohortName))
+      return(private$.cohortDefinitionSet |> dplyr::select(cohortName, cohortId, subsetDefinitionId))
     }
 
   )
