@@ -4,7 +4,7 @@
 \alias{.render_apex_plot}
 \title{Renders an Apex chart for the given data.}
 \usage{
-.render_apex_plot(data, colorTimeHist = "#00BFFF")
+.render_apex_plot(data)
 }
 \arguments{
 \item{data}{A data frame containing the data to be plotted.}

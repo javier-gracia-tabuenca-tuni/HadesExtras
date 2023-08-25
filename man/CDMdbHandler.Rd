@@ -35,7 +35,6 @@ Class for handling database connection and schema information for a CDM database
 \item \href{#method-CDMdbHandler-new}{\code{CDMdbHandler$new()}}
 \item \href{#method-CDMdbHandler-finalize}{\code{CDMdbHandler$finalize()}}
 \item \href{#method-CDMdbHandler-loadConnection}{\code{CDMdbHandler$loadConnection()}}
-\item \href{#method-CDMdbHandler-getConnectionStatus}{\code{CDMdbHandler$getConnectionStatus()}}
 \item \href{#method-CDMdbHandler-clone}{\code{CDMdbHandler$clone()}}
 }
 }
@@ -83,19 +82,8 @@ Reload connection
 \if{latex}{\out{\hypertarget{method-CDMdbHandler-loadConnection}{}}}
 \subsection{Method \code{loadConnection()}}{
 Updates the connection status by checking the database connection, vocabulary database schema, and CDM database schema.
-Get connection status
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{CDMdbHandler$loadConnection()}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CDMdbHandler-getConnectionStatus"></a>}}
-\if{latex}{\out{\hypertarget{method-CDMdbHandler-getConnectionStatus}{}}}
-\subsection{Method \code{getConnectionStatus()}}{
-gets tibble with database name and connection status.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{CDMdbHandler$getConnectionStatus()}\if{html}{\out{</div>}}
 }
 
 }

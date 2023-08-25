@@ -123,7 +123,7 @@ cohortDefinitionSetWithSubsetDef |>  tibble::as_tibble() |> dplyr::select(-sql, 
 
 Build cohorts 
 ```{r}
-cohortTableHandler$insertOrUpdateCohorts(cohortDefinitionSetWithSubsetDef |> dplyr::filter(subsetDefinitionId==20))
+cohortTableHandler$insertOrUpdateCohorts(cohortDefinitionSetWithSubsetDef |> dplyr::filter(cohortId==20020))
 ```
 
 ```{r}

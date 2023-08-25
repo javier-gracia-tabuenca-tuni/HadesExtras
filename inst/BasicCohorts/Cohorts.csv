@@ -1,0 +1,4 @@
+cohort_id,cohort_name,logic_description,generate_stats
+1,All population first to last observation [BasicCohorts][HadesExtras],NA,FALSE
+2,All male first to last observation [BasicCohorts][HadesExtras],NA,FALSE
+3,All female first to last observation [BasicCohorts][HadesExtras],NA,FALSE

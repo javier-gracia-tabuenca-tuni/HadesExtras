@@ -4,10 +4,10 @@
 \alias{createCohortTableHandlerFromList}
 \title{createCohortTableHandlerFromList}
 \usage{
-createCohortTableHandlerFromList(config)
+createCohortTableHandlerFromList(cohortTableHandlerConfig)
 }
 \arguments{
-\item{config}{A list containing configuration settings for the CohortTableHandler.
+\item{cohortTableHandlerConfig}{A list containing cohortTableHandlerConfiguration settings for the CohortTableHandler.
 \itemize{
 \item databaseName: The name of the database.
 \item connection: A list of connection details settings.
@@ -19,5 +19,5 @@ createCohortTableHandlerFromList(config)
 A CohortTableHandler object.
 }
 \description{
-A function to create a CohortTableHandler object from a list of configuration settings.
+A function to create a CohortTableHandler object from a list of cohortTableHandlerConfiguration settings.
 }

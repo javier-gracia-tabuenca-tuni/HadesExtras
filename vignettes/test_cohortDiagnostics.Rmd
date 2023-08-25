@@ -1,0 +1,136 @@
+---
+title: "Using Matching Subset"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{test_subsetdefinitions}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+#library(HadesExtras)
+devtools::load_all(".")
+#options("DEBUG_DATABASECONNECTOR_DBPLYR" = FALSE)
+```
+
+# Configuration 
+
+Create a `CohortTableHandles` with a test cohort. 
+
+```{r}
+config_yaml <- "
+  databaseName: Eunomia1
+  connection:
+    connectionDetailsSettings:
+        dbms: eunomia
+  cdm:
+      cdmDatabaseSchema: main
+      vocabularyDatabaseSchema: main
+  cohortTable:
+      cohortDatabaseSchema: main
+      cohortTableName: test_cohort_table"
+
+cat(config_yaml)
+```
+
+```{r}
+config <- yaml::yaml.load(config_yaml)
+```
+
+```{r}
+configurations <- yaml::read_yaml(testthat::test_path("config", "test_config.yml"))
+configurationName <- "dev_bigquery"
+configurationName <- "dev_eunomia"
+config <- configurations[[configurationName]]
+```
+
+# Create CohortTableHandler
+
+As in `CDMHandled`, to create a `CohortTableHandles`, for convenience `createCohortTableHandlerFromList` can be used. 
+```{r}
+cohortTableHandler <- createCohortTableHandlerFromList(config)
+```
+
+In addition to the checks performed by `CDMHandled`, `cohortTableHandler` includes a check on the creation of the `cohort` table. 
+
+```{r}
+cohortTableHandler$connectionStatusLog |> 
+  reactable_connectionStatus()
+```
+
+```{r}
+cohortDefinitionSet <- CohortGenerator::getCohortDefinitionSet(
+    settingsFileName = "testdata/name/Cohorts.csv",
+    jsonFolder = "testdata/name/cohorts",
+    sqlFolder = "testdata/name/sql/sql_server",
+    cohortFileNameFormat = "%s",
+    cohortFileNameValue = c("cohortName"),
+    packageName = "CohortGenerator",
+    verbose = FALSE
+  )
+
+```
+
+
+Build cohorts 
+```{r}
+cohortTableHandler$insertOrUpdateCohorts(cohortDefinitionSet)
+```
+
+```{r}
+cohortsSummary <- cohortTableHandler$getCohortsSummary()
+```
+
+```{r}
+rectable_cohortsSummary(cohortsSummary)
+```
+
+
+
+
+
+```{r}
+exportFolder <- 'export3'
+
+CohortDiagnostics::executeDiagnostics(
+                   cohortDefinitionSet,
+                   connection = cohortTableHandler$connectionHandler$getConnection(),
+                   cohortTable = cohortTableHandler$cohortTableNames$cohortTable,
+                   cohortDatabaseSchema = cohortTableHandler$cohortDatabaseSchema,
+                   cdmDatabaseSchema = cohortTableHandler$cdmDatabaseSchema,
+                   exportFolder = exportFolder,
+                   databaseId = "MyCdm",
+                   minCellCount = 5, 
+                   
+                   runInclusionStatistics = FALSE,
+  runIncludedSourceConcepts = FALSE,
+  runOrphanConcepts = FALSE,
+  runTimeSeries = TRUE,
+  runVisitContext = FALSE,
+  runBreakdownIndexEvents = FALSE,
+  runIncidenceRate = FALSE,
+  runCohortRelationship = FALSE,runTemporalCohortCharacterization = FALSE
+)
+```
+
+
+```{r eval=FALSE}
+CohortDiagnostics::createMergedResultsFile(exportFolder, sqliteDbPath = "MyCohortDiagnosticsResulst.sqlite", overwrite = TRUE)
+CohortDiagnostics::launchDiagnosticsExplorer(sqliteDbPath = "MyCohortDiagnosticsResulst.sqlite")
+```
+
+
+
+
+
+
+

@@ -1,0 +1,182 @@
+---
+title: "Using TimeCodeWAS"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{test_subsetdefinitions}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+#library(HadesExtras)
+devtools::load_all(".")
+#options("DEBUG_DATABASECONNECTOR_DBPLYR" = FALSE)
+```
+
+# Configuration 
+
+Create a `CohortTableHandles` with a test cohort. 
+
+```{r}
+config_yaml <- "
+  databaseName: Eunomia1
+  connection:
+    connectionDetailsSettings:
+        dbms: eunomia
+  cdm:
+      cdmDatabaseSchema: main
+      vocabularyDatabaseSchema: main
+  cohortTable:
+      cohortDatabaseSchema: main
+      cohortTableName: test_cohort_table"
+
+cat(config_yaml)
+```
+
+```{r}
+config <- yaml::yaml.load(config_yaml)
+```
+
+```{r}
+configurations <- yaml::read_yaml(testthat::test_path("config", "test_config.yml"))
+configurationName <- "dev_bigquery"
+configurationName <- "dev_eunomia"
+config <- configurations[[configurationName]]
+```
+
+# Create CohortTableHandler
+
+As in `CDMHandled`, to create a `CohortTableHandles`, for convenience `createCohortTableHandlerFromList` can be used. 
+```{r}
+cohortTableHandler <- createCohortTableHandlerFromList(config)
+```
+
+In addition to the checks performed by `CDMHandled`, `cohortTableHandler` includes a check on the creation of the `cohort` table. 
+
+```{r}
+cohortTableHandler$connectionStatusLog |> 
+  reactable_connectionStatus()
+```
+
+# Import cohorts
+
+```{r eval=FALSE}
+cohortDefinitionSet <- CohortGenerator::getCohortDefinitionSet(
+  settingsFileName = "testdata/asthma/Cohorts.csv",
+  jsonFolder = "testdata/asthma/cohorts",
+  sqlFolder = "testdata/asthma/sql/sql_server",
+  cohortFileNameFormat = "%s",
+  cohortFileNameValue = c("cohortId"),
+  subsetJsonFolder = "testdata/asthma/cohort_subset_definitions/",
+  packageName = "HadesExtras",
+  verbose = FALSE
+) |> tibble::as_tibble()
+
+```
+
+
+```{r}
+cohortDefinitionSet <- CohortGenerator::getCohortDefinitionSet(
+  settingsFileName = here::here("inst/testdata/asthma/Cohorts.csv"),
+  jsonFolder = here::here("inst/testdata/asthma/cohorts"),
+  sqlFolder = here::here("inst/testdata/asthma/sql/sql_server"),
+  cohortFileNameFormat = "%s",
+  cohortFileNameValue = c("cohortId"),
+  subsetJsonFolder = here::here("inst/testdata/asthma/cohort_subset_definitions/"),
+  #packageName = "HadesExtras",
+  verbose = FALSE
+) |> tibble::as_tibble()
+
+```
+
+# Create a matching subset 
+
+```{r}
+# Match to sex and bday, match ratio 10
+  subsetDef <- CohortGenerator::createCohortSubsetDefinition(
+    name = "",
+    definitionId = 1,
+    subsetOperators = list(
+      createMatchingSubset(
+        matchToCohortId = 1,
+        matchRatio = 10,
+        matchSex = TRUE,
+        matchBirthYear = TRUE,
+        matchCohortStartDateWithInDuration = FALSE,
+        newCohortStartDate = "asMatch",
+        newCohortEndDate = "keep"
+      )
+    )
+  )
+```
+
+```{r}
+
+cohortDefinitionSetWithSubsetDef <- cohortDefinitionSet |>
+  CohortGenerator::addCohortSubsetDefinition(subsetDef, targetCohortIds = 2)
+
+cohortDefinitionSetWithSubsetDef |>  tibble::as_tibble() |> dplyr::select(-sql, -json)
+```
+
+
+
+Build cohorts 
+```{r}
+cohortTableHandler$insertOrUpdateCohorts(cohortDefinitionSetWithSubsetDef)
+```
+
+```{r}
+cohortTableHandler$getCohortsSummary() |> 
+  rectable_cohortsSummary()
+```
+
+
+# calcualte table 
+
+```{r}
+temporalStartDays = c(-365*5,   -365*4,   -365*3,   -365*2, -365*1, -3,   4,   365+1, 365*2+1, 365*3+1, 365*4+1)
+temporalEndDays =   c(-365*4-1, -365*3-1, -365*2-1, -365*1-1,   -4,  3, 365,   365*2, 365*3,   365*4,   365*5)
+
+temporalCovariateSettings = FeatureExtraction::createTemporalCovariateSettings(
+  useConditionOccurrence = TRUE, 
+  useDrugExposure =  TRUE, 
+  useProcedureOccurrence = TRUE, 
+  useMeasurement = TRUE,
+  useObservation = TRUE,
+  temporalStartDays = temporalStartDays, 
+  temporalEndDays =   temporalEndDays
+)
+
+```
+
+```{r}
+
+timeCodeWasCounts <- CohortDiagnostics_runTimeCodeWAS(
+    connection = cohortTableHandler$connectionHandler$getConnection(),
+    cdmDatabaseSchema = cohortTableHandler$cdmDatabaseSchema,
+    vocabularyDatabaseSchema = cohortTableHandler$vocabularyDatabaseSchema,
+    cohortDatabaseSchema = cohortTableHandler$cohortDatabaseSchema,
+    cohortTable = cohortTableHandler$cohortTableNames$cohortTable,
+    cohortIdCases = 1,
+    cohortIdControls = 2001,
+    covariateSettings = temporalCovariateSettings
+)
+
+```
+
+```{r}
+timeCodeWasCounts
+```
+
+
+
+
