@@ -99,7 +99,7 @@ rectable_cohortsSummary(cohortsSummary)
 
 
 ```{r}
-exportFolder <- 'export3'
+exportFolder <- 'export'
 
 CohortDiagnostics::executeDiagnostics(
                    cohortDefinitionSet,
@@ -125,6 +125,10 @@ CohortDiagnostics::executeDiagnostics(
 
 ```{r eval=FALSE}
 CohortDiagnostics::createMergedResultsFile(exportFolder, sqliteDbPath = "MyCohortDiagnosticsResulst.sqlite", overwrite = TRUE)
+```
+
+
+```{r eval=FALSE}
 CohortDiagnostics::launchDiagnosticsExplorer(sqliteDbPath = "MyCohortDiagnosticsResulst.sqlite")
 ```
 

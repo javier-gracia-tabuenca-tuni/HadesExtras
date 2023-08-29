@@ -179,4 +179,59 @@ timeCodeWasCounts
 
 
 
+```{r}
+
+  connection <- cohortTableHandler$connectionHandler$getConnection()
+  cohort <- dplyr::tbl(connection, tmp_inDatabaseSchema("main", "test_cohort_table"))
+  person <- dplyr::tbl(connection, tmp_inDatabaseSchema("main", "person"))
+
+  cohort |>  dplyr::left_join(
+    person, 
+    by = c("subject_id" = "person_id")
+  ) |> 
+ dplyr::collect() |> 
+    dplyr::left_join(
+      cohortDefinitionSet |> dplyr::select(cohortId,cohortName), 
+      by = c("cohort_definition_id" = "cohortId")
+                     ) |> 
+    dplyr::select(
+      cohort_name = cohortName, 
+      person_source_value,
+      cohort_start_date,
+      cohort_end_date
+    ) |> 
+    dplyr::filter(!is.na(cohort_name)) |> 
+    dplyr::filter(!is.na(person_source_value)) |> 
+    readr::write_csv("asthma.csv")
+    
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

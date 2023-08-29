@@ -23,6 +23,7 @@ Imports:
     digest,
     dplyr,
     Eunomia,
+    FeatureExtraction,
     here,
     htmltools,
     lubridate,
