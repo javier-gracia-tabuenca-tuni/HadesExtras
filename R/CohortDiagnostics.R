@@ -165,7 +165,10 @@ CohortDiagnostics_runTimeCodeWAS <- function(
       by = "covariateId"
     )
 
+  ParallelLogger::logInfo("Adding Fisher test output")
   timeCodeWasCounts <- .addFisherTestToCodeCounts(timeCodeWasCounts)
+
+  ParallelLogger::logInfo("CohortDiagnostics_runTimeCodeWAS completed")
 
   return(timeCodeWasCounts)
 
