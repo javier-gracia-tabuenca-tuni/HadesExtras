@@ -130,9 +130,9 @@ CohortDiagnostics_runTimeCodeWAS <- function(
 
   timeCodeWasCounts <-
     dplyr::full_join(
-      covariate_case$covariates %>% tibble::as_tibble() %>%
+      covariate_case$covariates |> tibble::as_tibble() |>
         select(covariateId, timeId, n_cases_yes=sumValue),
-      covariate_control$covariates %>% tibble::as_tibble() %>%
+      covariate_control$covariates |> tibble::as_tibble() |>
         select( covariateId, timeId, n_controls_yes=sumValue),
       by = c("covariateId", "timeId")
     )  |>
@@ -147,20 +147,20 @@ CohortDiagnostics_runTimeCodeWAS <- function(
       n_cases = n_cases,
       n_cases_no = n_cases - n_cases_yes,
       n_controls_no = n_controls - n_controls_yes
-    ) %>%
+    ) |>
     dplyr::left_join(
-      covariate_case$timeRef %>%  tibble::as_tibble() %>%
-        dplyr::mutate(timeRange = stringr::str_c("from ", startDay," to ", endDay)) %>%
-        dplyr::arrange(timeId) %>%
-        dplyr::mutate(timeRange = factor(timeRange, levels = .$timeRange)) %>%
+      covariate_case$timeRef |>  tibble::as_tibble() |>
+        dplyr::mutate(timeRange = stringr::str_c("from ", startDay," to ", endDay)) |>
+        dplyr::arrange(timeId) |>
+        dplyr::mutate(timeRange = factor(timeRange, levels = .$timeRange)) |>
         dplyr::select(timeId, timeRange),
       by = "timeId"
-    ) %>%
+    ) |>
     dplyr::left_join(
       dplyr::bind_rows(
-        covariate_case$covariateRef %>% tibble::as_tibble(),
-        covariate_control$covariateRef %>% tibble::as_tibble()
-      ) %>%
+        covariate_case$covariateRef |> tibble::as_tibble(),
+        covariate_control$covariateRef |> tibble::as_tibble()
+      ) |>
         dplyr::distinct(covariateId, covariateName ),
       by = "covariateId"
     )
@@ -195,12 +195,12 @@ CohortDiagnostics_runTimeCodeWAS <- function(
   }
 
 
-  timeCodeWasCounts <- timeCodeWasCounts %>%
+  timeCodeWasCounts <- timeCodeWasCounts |>
     dplyr::bind_cols(
-      timeCodeWasCounts %>%
-        dplyr::select(n_cases_yes,n_cases_no,n_controls_yes,n_controls_no) %>%
+      timeCodeWasCounts |>
+        dplyr::select(n_cases_yes,n_cases_no,n_controls_yes,n_controls_no) |>
         purrr::pmap_df( ~.fisher(..1,..2,..3,..4))
-    ) %>%
+    ) |>
     dplyr::mutate(
       up_in = dplyr::if_else(OR>1, "Case", "Ctrl")
     )
