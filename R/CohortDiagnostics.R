@@ -152,7 +152,6 @@ CohortDiagnostics_runTimeCodeWAS <- function(
       covariate_case$timeRef |>  tibble::as_tibble() |>
         dplyr::mutate(timeRange = stringr::str_c("from ", startDay," to ", endDay)) |>
         dplyr::arrange(timeId) |>
-        dplyr::mutate(timeRange = factor(timeRange, levels = .$timeRange)) |>
         dplyr::select(timeId, timeRange),
       by = "timeId"
     ) |>
