@@ -7,12 +7,13 @@ test_that("rectable_cohortsSummary works", {
 
   # cohorts from eunomia
   cohortDefinitionSet <- CohortGenerator::getCohortDefinitionSet(
-    settingsFileName = "testdata/name/Cohorts.csv",
-    jsonFolder = "testdata/name/cohorts",
-    sqlFolder = "testdata/name/sql/sql_server",
+    settingsFileName = here::here("inst/testdata/asthma/Cohorts.csv"),
+    jsonFolder = here::here("inst/testdata/asthma/cohorts"),
+    sqlFolder = here::here("inst/testdata/asthma/sql/sql_server"),
     cohortFileNameFormat = "%s",
-    cohortFileNameValue = c("cohortName"),
-    packageName = "CohortGenerator",
+    cohortFileNameValue = c("cohortId"),
+    subsetJsonFolder = here::here("inst/testdata/asthma/cohort_subset_definitions/"),
+    #packageName = "HadesExtras",
     verbose = FALSE
   )
 

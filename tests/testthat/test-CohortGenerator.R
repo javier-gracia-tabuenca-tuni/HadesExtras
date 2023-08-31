@@ -86,6 +86,7 @@ test_that("cohortDataToCohortDefinitionSet works", {
   cohortGeneratorResults <- CohortGenerator_generateCohortSet(
     connection = connection,
     cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
+    cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema,
     cohortDefinitionSet = cohortDefinitionSet,
     incremental = FALSE
   )
@@ -133,6 +134,7 @@ test_that("cohortDataToCohortDefinitionSet reports missing source person id", {
   cohortGeneratorResults <- CohortGenerator_generateCohortSet(
     connection = connection,
     cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
+    cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema,
     cohortDefinitionSet = cohortDefinitionSet,
     incremental = FALSE
   )
@@ -180,6 +182,7 @@ test_that("cohortDataToCohortDefinitionSet reports missing cohort_start_date", {
   cohortGeneratorResults <- CohortGenerator_generateCohortSet(
     connection = connection,
     cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
+    cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema,
     cohortDefinitionSet = cohortDefinitionSet,
     incremental = FALSE
   )
@@ -228,6 +231,7 @@ test_that("cohortDataToCohortDefinitionSet reports missing cohort_end_date", {
   cohortGeneratorResults <- CohortGenerator_generateCohortSet(
     connection = connection,
     cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
+    cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema,
     cohortDefinitionSet = cohortDefinitionSet,
     incremental = FALSE
   )
@@ -296,6 +300,7 @@ test_that("cohortDataToCohortDefinitionSet also works from imported files", {
   cohortGeneratorResults <- CohortGenerator_generateCohortSet(
     connection = connection,
     cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
+    cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema,
     cohortDefinitionSet = cohortDefinitionSet,
     incremental = FALSE
   )
@@ -346,6 +351,7 @@ test_that("cohortDataToCohortDefinitionSet incremental mode do not create the tm
   cohortGeneratorResults <- CohortGenerator_generateCohortSet(
     connection = connection,
     cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
+    cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema,
     cohortDefinitionSet = cohortDefinitionSet,
     incremental = TRUE,
     incrementalFolder = incrementalFolder
@@ -371,6 +377,7 @@ test_that("cohortDataToCohortDefinitionSet incremental mode do not create the tm
   cohortGeneratorResults <- CohortGenerator_generateCohortSet(
     connection = connection,
     cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
+    cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema,
     cohortDefinitionSet = cohortDefinitionSet,
     incremental = TRUE,
     incrementalFolder = incrementalFolder

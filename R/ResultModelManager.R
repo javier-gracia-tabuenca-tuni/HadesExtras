@@ -46,6 +46,8 @@ ResultModelManager_createConnectionHandler  <- function(
   # set tempEmulationSchema if in config
   if(!is.null(tempEmulationSchema)){
     options(sqlRenderTempEmulationSchema = tempEmulationSchema)
+  }else{
+    options(sqlRenderTempEmulationSchema = NULL)
   }
 
   # set useBigrqueryUpload if in config

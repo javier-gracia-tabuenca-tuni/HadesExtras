@@ -8,6 +8,42 @@ helper_createNewConnection <- function(){
     connectionDetails <- rlang::exec(DatabaseConnector::createConnectionDetails, !!!connectionDetailsSettings)
   }
 
+  # set tempEmulationSchema if in config
+  if(!is.null(testSelectedConfiguration$connection$tempEmulationSchema)){
+    options(sqlRenderTempEmulationSchema = testSelectedConfiguration$connection$tempEmulationSchema)
+  }else{
+    options(sqlRenderTempEmulationSchema = NULL)
+  }
+
+  # set useBigrqueryUpload if in config
+  if(!is.null(testSelectedConfiguration$connection$useBigrqueryUpload)){
+    options(useBigrqueryUpload = testSelectedConfiguration$connection$useBigrqueryUpload)
+
+    # bq authentication
+    if(testSelectedConfiguration$connection$useBigrqueryUpload==TRUE){
+      checkmate::assertTRUE(connectionDetails$dbms=="bigquery")
+
+      options(gargle_oauth_cache=FALSE) #to avoid the question that freezes the app
+      connectionString <- connectionDetails$connectionString()
+      if( connectionString |> stringr::str_detect(";OAuthType=0;")){
+        OAuthPvtKeyPath <- connectionString |>
+          stringr::str_extract("OAuthPvtKeyPath=([:graph:][^;]+);") |>
+          stringr::str_remove("OAuthPvtKeyPath=") |> stringr::str_remove(";")
+
+        checkmate::assertFileExists(OAuthPvtKeyPath)
+        bigrquery::bq_auth(path = OAuthPvtKeyPath)
+
+      }else{
+        bigrquery::bq_auth(scopes = "https://www.googleapis.com/auth/bigquery")
+      }
+
+      connectionDetails$connectionString
+    }
+
+  }else{
+    options(useBigrqueryUpload = NULL)
+  }
+
   connection <- DatabaseConnector::connect(connectionDetails)
 
   return(connection)

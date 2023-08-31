@@ -37,7 +37,7 @@ CohortGenerator_generateCohortSet <- function(
     cdmDatabaseSchema,
     tempEmulationSchema = getOption("sqlRenderTempEmulationSchema"),
     cohortDatabaseSchema = cdmDatabaseSchema,
-    cohortTableNames = getCohortTableNames(),
+    cohortTableNames = CohortGenerator::getCohortTableNames(),
     cohortDefinitionSet = NULL,
     stopOnError = TRUE,
     incremental = FALSE,
@@ -62,6 +62,20 @@ CohortGenerator_generateCohortSet <- function(
   if (is.null(connection)) {
     connection <- DatabaseConnector::connect(connectionDetails)
     on.exit(DatabaseConnector::disconnect(connection))
+  }
+
+  #
+  # Pre calculate tmp_cohortdata settings. This needs to be here so that incremental mode detects the cohort not to copy to cohortData
+  #
+  cohortDataImportTmpTableName <- getOption("cohortDataImportTmpTableName", "tmp_cohortdata")
+  cohortDataImportTmpTableNameFull <-cohortDataImportTmpTableName
+  # if we are using a tempEmulationSchema, full path to table has to be recalculated, and changed in the sql
+  sqlRenderTempEmulationSchema <- getOption("sqlRenderTempEmulationSchema")
+  if (!is.null(sqlRenderTempEmulationSchema)) {
+    cohortDataImportTmpTableNameFull <- paste0(sqlRenderTempEmulationSchema, ".", SqlRender::getTempTablePrefix(), cohortDataImportTmpTableName)
+    # we have to correct the sql in cohortDefinitionSet
+    cohortDefinitionSet <- cohortDefinitionSet |>
+      dplyr::mutate(sql = stringr::str_replace(sql, cohortDataImportTmpTableName, cohortDataImportTmpTableNameFull))
   }
 
   #
@@ -151,10 +165,9 @@ CohortGenerator_generateCohortSet <- function(
     #dplyr::compute()
     # instead of compute, we create a temporal table, so the same stays the same in the sql, this is necesary for incremental mode
     # overwrite not working
-    cohortDataImportTmpTableName <- getOption("cohortDataImportTmpTableName", "tmp_cohortdata")
-    if(DatabaseConnector::dbExistsTable(connection, cohortDataImportTmpTableName)){
-      DatabaseConnector::dbRemoveTable(connection, cohortDataImportTmpTableName)
-    }
+    #browser()
+    try(DatabaseConnector::dbRemoveTable(connection, cohortDataImportTmpTableNameFull), silent = TRUE)
+    #browser()
     toAppend <- dplyr::copy_to(connection, toAppend, cohortDataImportTmpTableName, temporary = TRUE, overwrite = TRUE)
 
     # replace recalculated cohortDefinitionSets
@@ -168,6 +181,7 @@ CohortGenerator_generateCohortSet <- function(
   #
   # end function before generateCohortSet
   #
+  #browser()
   results <- CohortGenerator::generateCohortSet(
     connection = connection,
     cdmDatabaseSchema = cdmDatabaseSchema,
@@ -188,6 +202,8 @@ CohortGenerator_generateCohortSet <- function(
       endTime = lubridate::as_datetime(endTime),
       buildInfo = map(.x = cohortId, .f = ~{LogTibble$new()})
     )
+
+  #browser()
   #
   # start function after generateCohortSet
   #
@@ -230,7 +246,7 @@ CohortGenerator_generateCohortSet <- function(
     buildInfo$SUCCESS("", "All person_source_values were found")
   }
   if(cohortDataInfo$n_missing_source_person == cohortDataInfo$n_source_person ){
-    buildInfo$ERROR("", "All person_source_values were found")
+    buildInfo$ERROR("", "None person_source_values were found")
   }
   if(cohortDataInfo$n_missing_source_person != 0 & cohortDataInfo$n_missing_source_person != cohortDataInfo$n_source_person ){
     buildInfo$WARNING("", cohortDataInfo$n_missing_source_person, "person_source_values were not found")
