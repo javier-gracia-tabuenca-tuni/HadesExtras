@@ -100,6 +100,50 @@ test_that(" cohortDataToCohortDefinitionSet works", {
 
 
 
+#
+# getCohortDataFromCohortTable
+#
+
+test_that("getCohortDataFromCohortTable returns a cohort", {
+
+  connection <- helper_createNewConnection()
+
+  CohortGenerator::createCohortTables(
+    connection = connection,
+    cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema,
+    cohortTableNames = getCohortTableNames(testSelectedConfiguration$cohortTable$cohortTableName),
+  )
+
+  cohortDefinitionSet <- CohortGenerator::getCohortDefinitionSet(
+    settingsFileName = here::here("inst/testdata/matching/Cohorts.csv"),
+    jsonFolder = here::here("inst/testdata/matching/cohorts"),
+    sqlFolder = here::here("inst/testdata/matching/sql/sql_server"),
+    cohortFileNameFormat = "%s",
+    cohortFileNameValue = c("cohortName"),
+    #packageName = "HadesExtras",
+    verbose = FALSE
+  )
+
+  generatedCohorts <- CohortGenerator::generateCohortSet(
+    connection = connection,
+    cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
+    cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema,
+    cohortTableNames = getCohortTableNames(testSelectedConfiguration$cohortTable$cohortTableName),
+    cohortDefinitionSet = cohortDefinitionSet,
+    incremental = FALSE
+  )
+
+  cohortData <- getCohortDataFromCohortTable(
+    connection = connection,
+    cdmDatabaseSchema = testSelectedConfiguration$cdm$cdmDatabaseSchema,
+    cohortDatabaseSchema = testSelectedConfiguration$cohortTable$cohortDatabaseSchema,
+    cohortTable = testSelectedConfiguration$cohortTable$cohortTableName,
+    cohortNameIds = generatedCohorts |> dplyr::select(cohortId, cohortName)
+  )
+
+  cohortData |> checkCohortData() |> expect_true()
+  cohortData |> nrow() |> expect_gt(0)
+})
 
 
 

@@ -225,6 +225,89 @@ cohortDataToCohortDefinitionSet <- function(
 
 
 
+#' Get Cohort Data from Cohort Table
+#'
+#' This function retrieves cohort data from a cohort table in a database.
+#'
+#' @param connectionDetails A list of connection details (optional).
+#' @param connection An existing database connection (optional).
+#' @param cdmDatabaseSchema The schema name for the CDM database.
+#' @param cohortDatabaseSchema The schema name for the cohort database.
+#' @param cohortTable The name of the cohort table.
+#' @param cohortNameIds A data frame containing cohort name IDs.
+#'
+#' @details
+#' This function retrieves cohort data from a specified cohort table in a database.
+#' It validates the input parameters, establishes a database connection if one is not provided,
+#' and then performs SQL operations to retrieve the cohort data.
+#'
+#' @importFrom DatabaseConnector connect disconnect dbGetQuery
+#' @importFrom SqlRender readSql render translate
+#' @importFrom checkmate assertString assertDataFrame assertNames
+#'
+#' @return Returns TRUE if the cohort data is successfully retrieved.
+#'
+#' @export
+getCohortDataFromCohortTable <- function(
+    connectionDetails = NULL,
+    connection = NULL,
+    cdmDatabaseSchema,
+    cohortDatabaseSchema,
+    cohortTable,
+    cohortNameIds){
+  #
+  # Validate parameters
+  #
+  if (is.null(connection) && is.null(connectionDetails)) {
+    stop("You must provide either a database connection or the connection details.")
+  }
+
+  if (is.null(connection)) {
+    connection <- DatabaseConnector::connect(connectionDetails)
+    on.exit(DatabaseConnector::disconnect(connection))
+  }
+
+  cdmDatabaseSchema |> checkmate::assertString()
+  cohortDatabaseSchema |> checkmate::assertString()
+  cohortTable |> checkmate::assertString()
+  cohortNameIds |> checkmate::assertDataFrame()
+  cohortNameIds |> names() |> checkmate::assertNames(must.include = c("cohortId", "cohortName"))
+
+  #
+  # Function
+  sql <- SqlRender::readSql(system.file("sql/sql_server/GetCohortDataFromCohortTables.sql", package = "HadesExtras", mustWork = TRUE))
+  sql <- SqlRender::render(
+    sql = sql,
+    cdm_database_schema = cdmDatabaseSchema,
+    cohort_database_schema = cohortDatabaseSchema,
+    cohort_table = cohortTable,
+    cohort_ids = paste0("(", paste0(cohortNameIds$cohortId, collapse = " ,"), ")"),
+    warnOnMissingParameters = TRUE
+  )
+  sql <- SqlRender::translate(
+    sql = sql,
+    targetDialect = connection@dbms
+  )
+  cohortTable <- DatabaseConnector::dbGetQuery(connection, sql, progressBar = FALSE, reportOverallTime = FALSE) |>
+    tibble::as_tibble()
+
+  cohortData <- cohortTable |>
+    dplyr::left_join(cohortNameIds, by=c("cohort_definition_id"="cohortId")) |>
+    dplyr::select(cohort_name = cohortName, person_source_value, cohort_start_date, cohort_end_date)
+
+  return(cohortData)
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 
